@@ -62,10 +62,16 @@ function sunSnapshot(now: number, events: SunEvent[]): SunSnapshot {
     if (e.hour <= now) prev = e;
     else if (!next) next = e;
   }
-  const nearest = (kind: SunEvent["kind"]) =>
-    events
-      .filter((e) => e.kind === kind)
-      .reduce((best, e) => (Math.abs(e.hour - now) < Math.abs(best - now) ? e.hour : best), now);
+  // min(..., default=now) in engine.py: `now` is the fallback for *no* events
+  // of that kind, not a starting candidate (seeding the reduce with it would
+  // always win at distance 0).
+  const nearest = (kind: SunEvent["kind"]) => {
+    const hours = events.filter((e) => e.kind === kind).map((e) => e.hour);
+    if (!hours.length) return now;
+    return hours.reduce((best, h) =>
+      Math.abs(h - now) < Math.abs(best - now) ? h : best,
+    );
+  };
   const nearestSunrise = nearest("sunrise");
   const nearestSunset = nearest("sunset");
   if (!prev || !next) {
@@ -203,6 +209,26 @@ export function computeTimeline(schema: Schema, entityIds: string[], defaultLigh
     }));
   }
   return { sun, lights };
+}
+
+// The sun's live state at one fractional hour, matching the payload
+// coordinator.sun_state + engine.drive_to_values produce for sundial/status.
+export function computeSunState(sun: SunConfig, hour: number) {
+  const snap = sunSnapshot(hour, sunEvents(sun));
+  const drive = {
+    brightness: dayFactor(hour, snap, sun),
+    warmth: clamp(snap.position, 0, 1),
+  };
+  return {
+    snap,
+    drive,
+    brightness: Math.round(
+      lerp(sun.min_brightness, sun.max_brightness, clamp(drive.brightness, 0, 1)),
+    ),
+    colorTemp: round5(
+      lerp(sun.min_color_temp, sun.max_color_temp, clamp(drive.warmth, 0, 1)),
+    ),
+  };
 }
 
 export function computeTargets(

@@ -9,10 +9,13 @@ import type {
   HomeAssistant,
   HourCell,
   LightConfig,
+  LightStatus,
+  ManualReason,
   Schema,
+  StatusPayload,
 } from "../src/types";
-import { defaultLightConfig, defaultSunConfig } from "../src/utils";
-import { computeTargets, computeTimeline } from "./engine";
+import { currentHour, defaultLightConfig, defaultSunConfig } from "../src/utils";
+import { computeSunState, computeTargets, computeTimeline } from "./engine";
 
 // --- fake devices ------------------------------------------------------------
 
@@ -92,10 +95,38 @@ const defaultSettings = (): GlobalSettings => ({
 
 // --- store + WS dispatch -----------------------------------------------------
 
+// Stand-in for coordinator.LightRuntime, so the Status section has something
+// to show: one light starts manual and one is off/unavailable.
+interface FakeRuntime {
+  state: string;
+  manual_control: boolean;
+  manual_reason: ManualReason | null;
+  manual_since: string | null;
+}
+
 interface Store {
   settings: GlobalSettings;
   schemas: Record<string, Schema>;
   active_schema_id: string;
+  runtime: Record<string, FakeRuntime>;
+  started_at: number;
+}
+
+const OFFLINE = "light.hallway";
+const MANUAL = "light.kitchen";
+
+function newRuntime(): Record<string, FakeRuntime> {
+  const runtime: Record<string, FakeRuntime> = {};
+  for (const light of FAKE_LIGHTS) {
+    const manual = light.entity_id === MANUAL;
+    runtime[light.entity_id] = {
+      state: light.entity_id === OFFLINE ? "off" : "on",
+      manual_control: manual,
+      manual_reason: manual ? "explicit_turn_on" : null,
+      manual_since: manual ? new Date(Date.now() - 8 * 60_000).toISOString() : null,
+    };
+  }
+  return runtime;
 }
 
 function newStore(): Store {
@@ -103,6 +134,8 @@ function newStore(): Store {
     settings: defaultSettings(),
     schemas: { default: defaultSchema(), evening: eveningSchema() },
     active_schema_id: "default",
+    runtime: newRuntime(),
+    started_at: Date.now(),
   };
 }
 
@@ -124,6 +157,129 @@ function configPayload(store: Store): ConfigPayload {
     home_latitude: 52.3731,
     home_longitude: 4.8922,
     version: "0.0.0-dev",
+  };
+}
+
+// --- status ------------------------------------------------------------------
+
+const iso = (ms: number) => new Date(ms).toISOString();
+
+// The harness's sun events live in fractional local-hour space; turn one back
+// into a wall-clock timestamp for the status readouts.
+function hourToIso(hour: number): string {
+  const midnight = new Date();
+  midnight.setHours(0, 0, 0, 0);
+  return iso(midnight.getTime() + hour * 3600_000);
+}
+
+function statusPayload(store: Store): StatusPayload {
+  const now = Date.now();
+  const hour = currentHour();
+  const schema = store.schemas[store.active_schema_id];
+  const sun = computeSunState(schema.sun, hour);
+  const targets = computeTargets(schema, hour, entityIds(), defaultLightConfig);
+  // Fake a pass on the settings interval, counted from harness start.
+  const period = store.settings.interval * 1000;
+  const elapsed = now - store.started_at;
+  const lastPass = store.started_at + Math.floor(elapsed / period) * period;
+
+  const lights: Record<string, LightStatus> = {};
+  for (const light of FAKE_LIGHTS) {
+    const rt = store.runtime[light.entity_id];
+    const cfg = schema.lights[light.entity_id] ?? defaultLightConfig();
+    const target = targets[light.entity_id];
+    const on = rt.state === "on";
+    // A manual light reports something other than what we asked for — that's
+    // what made it manual in the first place.
+    const reported = rt.manual_control
+      ? { brightness_pct: 100, color_temp_kelvin: 2200 }
+      : target;
+    lights[light.entity_id] = {
+      state: rt.state,
+      manual_control: rt.manual_control,
+      manual_reason: rt.manual_reason,
+      manual_since: rt.manual_since,
+      auto_reset_at:
+        rt.manual_control && store.settings.autoreset_control > 0
+          ? iso(now + store.settings.autoreset_control * 1000)
+          : null,
+      target: { ...target, rgb_color: null },
+      reported: {
+        brightness_pct: on ? reported.brightness_pct : null,
+        color_temp_kelvin: on ? reported.color_temp_kelvin : null,
+        rgb_color: null,
+        color_mode: on ? (light.supports_rgb ? "rgb" : "color_temp") : null,
+      },
+      last_applied: rt.manual_control ? null : { ...target, rgb_color: null },
+      last_applied_at: rt.manual_control || !on ? null : iso(lastPass),
+      last_evaluated_at: iso(lastPass),
+      last_outcome: rt.manual_control
+        ? "skipped_manual"
+        : on
+          ? "skipped_at_target"
+          : "skipped_light_off",
+      settling: false,
+      supports: {
+        brightness: true,
+        color_temp: light.ct_range !== null,
+        rgb: light.supports_rgb,
+      },
+      supported_color_modes: [
+        ...(light.ct_range ? ["color_temp"] : []),
+        ...(light.supports_rgb ? ["rgb"] : []),
+      ],
+      config: {
+        min_brightness: cfg.min_brightness,
+        max_brightness: cfg.max_brightness,
+        min_color_temp: cfg.min_color_temp,
+        max_color_temp: cfg.max_color_temp,
+        limit_mode: cfg.limit_mode,
+        render_mode: cfg.render_mode,
+        separate_turn_on_commands: cfg.separate_turn_on_commands,
+      },
+    };
+  }
+
+  const custom =
+    store.settings.sun_latitude !== null && store.settings.sun_longitude !== null;
+  return {
+    now: iso(now),
+    local_hour: hour,
+    sun: {
+      position: sun.snap.position,
+      is_day: sun.snap.isDay,
+      nearest_sunrise: hourToIso(sun.snap.nearestSunrise),
+      nearest_sunset: hourToIso(sun.snap.nearestSunset),
+      sunrise_source: schema.sun.sunrise_time ? "fixed" : "astral",
+      sunset_source: schema.sun.sunset_time ? "fixed" : "astral",
+      latitude: custom ? store.settings.sun_latitude : 52.3731,
+      longitude: custom ? store.settings.sun_longitude : 4.8922,
+      coordinates_source: custom ? "settings" : "home",
+      drive: sun.drive,
+      values: {
+        brightness_pct: sun.brightness,
+        color_temp_kelvin: sun.colorTemp,
+        rgb_color: null,
+      },
+    },
+    lights,
+    global: {
+      enabled: true,
+      active_schema_id: schema.id,
+      active_schema_name: schema.name,
+      interval: store.settings.interval,
+      transition: store.settings.transition,
+      initial_transition: store.settings.initial_transition,
+      take_over_control: store.settings.take_over_control,
+      autoreset_control: store.settings.autoreset_control,
+      last_pass_at: iso(lastPass),
+      next_pass_at: iso(lastPass + period),
+      pass_running: false,
+      light_count: FAKE_LIGHTS.length,
+      manual_count: Object.values(store.runtime).filter((r) => r.manual_control)
+        .length,
+      unavailable_count: 0,
+    },
   };
 }
 
@@ -170,6 +326,19 @@ function handle(store: Store, msg: Msg): unknown {
 
     case "sundial/apply":
       return configPayload(store);
+
+    case "sundial/status":
+      return statusPayload(store);
+
+    case "sundial/set_manual_control": {
+      const rt = store.runtime[msg.entity_id as string];
+      if (rt) {
+        rt.manual_control = msg.manual as boolean;
+        rt.manual_reason = rt.manual_control ? "service" : null;
+        rt.manual_since = rt.manual_control ? new Date().toISOString() : null;
+      }
+      return statusPayload(store);
+    }
 
     case "sundial/export":
       return {

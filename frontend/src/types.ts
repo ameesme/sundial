@@ -97,6 +97,102 @@ export interface TimelineData {
   lights: Record<string, TimelineCell[]>; // entity_id -> length 24
 }
 
+// --- live diagnostics (from sundial/status) ---------------------------------
+
+// Brightness/colour triple, used for the target, what the light reports back,
+// and what we last wrote.
+export interface StatusValues {
+  brightness_pct: number | null;
+  color_temp_kelvin: number | null;
+  rgb_color: RgbColor | null;
+}
+
+export interface ReportedValues extends StatusValues {
+  color_mode: string | null;
+}
+
+// Why a light is under manual control (coordinator.py constants).
+export type ManualReason =
+  | "explicit_turn_on"
+  | "diverged"
+  | "turned_on_while_scheduled_off"
+  | "service";
+
+// What the last adaptation pass did with a light (coordinator.py constants).
+export type LightOutcome =
+  | "applied"
+  | "turned_off"
+  | "skipped_disabled"
+  | "skipped_manual"
+  | "skipped_no_state"
+  | "skipped_at_target"
+  | "skipped_light_off";
+
+export interface LightStatus {
+  state: string | null;
+  manual_control: boolean;
+  manual_reason: ManualReason | null;
+  manual_since: string | null;
+  auto_reset_at: string | null;
+  target: StatusValues | null;
+  reported: ReportedValues;
+  last_applied: StatusValues | null;
+  last_applied_at: string | null;
+  last_evaluated_at: string | null;
+  last_outcome: LightOutcome | null;
+  settling: boolean;
+  supports: { brightness: boolean; color_temp: boolean; rgb: boolean };
+  supported_color_modes: string[];
+  config: {
+    min_brightness: number;
+    max_brightness: number;
+    min_color_temp: number;
+    max_color_temp: number;
+    limit_mode: string;
+    render_mode: string;
+    separate_turn_on_commands: boolean;
+  };
+}
+
+export interface SunStatus {
+  position: number; // -1 solar midnight .. 1 solar noon
+  is_day: boolean;
+  nearest_sunrise: string | null;
+  nearest_sunset: string | null;
+  sunrise_source: "astral" | "fixed";
+  sunset_source: "astral" | "fixed";
+  latitude: number | null;
+  longitude: number | null;
+  coordinates_source: "settings" | "home";
+  drive: { brightness: number; warmth: number };
+  values: StatusValues;
+}
+
+export interface GlobalStatus {
+  enabled: boolean;
+  active_schema_id: string;
+  active_schema_name: string;
+  interval: number;
+  transition: number;
+  initial_transition: number;
+  take_over_control: boolean;
+  autoreset_control: number;
+  last_pass_at: string | null;
+  next_pass_at: string | null;
+  pass_running: boolean;
+  light_count: number;
+  manual_count: number;
+  unavailable_count: number;
+}
+
+export interface StatusPayload {
+  now: string;
+  local_hour: number;
+  sun: SunStatus;
+  lights: Record<string, LightStatus>;
+  global: GlobalStatus;
+}
+
 // Minimal slice of the Home Assistant object the panel relies on.
 export interface HomeAssistant {
   connection: {

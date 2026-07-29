@@ -5,6 +5,7 @@ import type {
   GlobalSettings,
   HomeAssistant,
   Schema,
+  StatusPayload,
   TimelineData,
 } from "./types";
 
@@ -54,6 +55,20 @@ export class SundialApi {
 
   apply(entityId?: string): Promise<ConfigPayload> {
     return this.send("sundial/apply", entityId ? { entity_id: entityId } : {});
+  }
+
+  // Live diagnostics for the Status section; polled while a sheet is open.
+  status(): Promise<StatusPayload> {
+    return this.send("sundial/status");
+  }
+
+  // Hand a light back to the schedule (or take it away) from the Status
+  // section. Resolves with the refreshed status.
+  setManualControl(entityId: string, manual: boolean): Promise<StatusPayload> {
+    return this.send("sundial/set_manual_control", {
+      entity_id: entityId,
+      manual,
+    });
   }
 
   // Full-configuration backup: the raw store document (all schemas + settings).
