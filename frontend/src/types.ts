@@ -66,6 +66,7 @@ export interface LightInfo {
   name: string;
   area_name: string | null;
   supports_rgb: boolean;
+  supports_color_temp: boolean;
   // The bulb's supported colour-temperature range (null for RGB-only lights
   // or while unavailable); used as the default per-light bounds.
   min_color_temp_kelvin: number | null;

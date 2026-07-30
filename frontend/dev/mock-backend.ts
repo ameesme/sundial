@@ -31,6 +31,9 @@ const FAKE_LIGHTS: FakeLight[] = [
   { entity_id: "light.living_room", name: "Living Room", area_name: "Living Room", supports_rgb: true, ct_range: [2000, 6500] },
   { entity_id: "light.floor_lamp", name: "Floor Lamp Corner", area_name: "Living Room", supports_rgb: false, ct_range: [2200, 4500] },
   { entity_id: "light.kitchen", name: "Kitchen Spots", area_name: "Kitchen", supports_rgb: false, ct_range: [2200, 4000] },
+  // Dimmer-only: no colour temperature, no RGB. Exercises the colourless
+  // path — flat timeline row, no colour controls in the editors.
+  { entity_id: "light.pantry", name: "Pantry Dimmer", area_name: "Kitchen", supports_rgb: false, ct_range: null },
   { entity_id: "light.bedroom", name: "Bedroom", area_name: "Bedroom", supports_rgb: true, ct_range: null },
   { entity_id: "light.hallway", name: "Hallway", area_name: null, supports_rgb: false, ct_range: [2700, 5000] },
 ];
@@ -151,6 +154,7 @@ function configPayload(store: Store): ConfigPayload {
       name: l.name,
       area_name: l.area_name,
       supports_rgb: l.supports_rgb,
+      supports_color_temp: l.ct_range !== null,
       min_color_temp_kelvin: l.ct_range?.[0] ?? null,
       max_color_temp_kelvin: l.ct_range?.[1] ?? null,
     })),

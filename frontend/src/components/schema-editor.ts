@@ -30,6 +30,7 @@ import type {
   ConfigPayload,
   HourCell,
   LightConfig,
+  LightInfo,
   Schema,
   StatusPayload,
   SunConfig,
@@ -40,6 +41,7 @@ import {
   KELVIN_MIN,
   currentHour,
   defaultLightConfig,
+  hasColor,
   hexToRgb,
   kelvinGradientCss,
   rgbToHex,
@@ -864,10 +866,12 @@ export class SchemaEditor extends LitElement {
     return null;
   }
 
+  private _lightInfo(entityId: string): LightInfo | undefined {
+    return this.config.lights.find((l) => l.entity_id === entityId);
+  }
+
   private _lightName(entityId: string): string {
-    return (
-      this.config.lights.find((l) => l.entity_id === entityId)?.name ?? entityId
-    );
+    return this._lightInfo(entityId)?.name ?? entityId;
   }
 
   private _contextTitle(): string {
@@ -912,14 +916,13 @@ export class SchemaEditor extends LitElement {
     }
     if (sel?.kind === "light") {
       return html`
-        ${this._renderRowPreview(this._timeline?.lights[sel.entityId])}
+        ${this._renderRowPreview(this._timeline?.lights[sel.entityId], sel.entityId)}
         ${this._renderLightEditor(sel.entityId)} ${this._renderStatus(sel.entityId)}
       `;
     }
-    if (sel?.kind === "cell") {
-      return html`${this._renderCellEditor(sel.ref)}
-      ${this._renderStatus(sel.ref.entityId)}`;
-    }
+    // No status on an hour cell: it describes the light as a whole, which is
+    // the light sheet's job, not this one hour's.
+    if (sel?.kind === "cell") return this._renderCellEditor(sel.ref);
     return html`<sundial-settings-tab
       .config=${this.config}
       .api=${this.api}
@@ -928,10 +931,16 @@ export class SchemaEditor extends LitElement {
 
   // The edited row's 24 cells, mirrored live above the editor.
   private _renderRowPreview(
-    cells: { brightness: number; color_temp: number }[] | undefined
+    cells: { brightness: number; color_temp: number }[] | undefined,
+    entityId?: string
   ): TemplateResult | typeof nothing {
     if (!cells?.length) return nothing;
-    return html`<sundial-row-preview .cells=${cells}></sundial-row-preview>`;
+    // No entityId means the sun's row, which always has colour.
+    const colorless = entityId !== undefined && !hasColor(this._lightInfo(entityId));
+    return html`<sundial-row-preview
+      .cells=${cells}
+      ?colorless=${colorless}
+    ></sundial-row-preview>`;
   }
 
   private _renderCellEditor(ref: CellRef): TemplateResult {
@@ -971,16 +980,18 @@ export class SchemaEditor extends LitElement {
             back on automatically.
           </p>`
         : nothing}
-      ${rangeField(
-        "Color temp",
-        colorTemp,
-        KELVIN_MIN,
-        KELVIN_MAX,
-        50,
-        "K",
-        (v) => setCell({ color_temp: v }),
-        kelvinGradientCss(KELVIN_MIN, KELVIN_MAX)
-      )}
+      ${hasColor(light)
+        ? rangeField(
+            "Color temp",
+            colorTemp,
+            KELVIN_MIN,
+            KELVIN_MAX,
+            50,
+            "K",
+            (v) => setCell({ color_temp: v }),
+            kelvinGradientCss(KELVIN_MIN, KELVIN_MAX)
+          )
+        : nothing}
       ${light?.supports_rgb
         ? html`<label class="toggle">
               <input
@@ -1082,20 +1093,25 @@ export class SchemaEditor extends LitElement {
             turn it back on automatically.
           </p>`
         : nothing}
-      ${sectionHeading("Color temperature")}
-      ${minMaxField(
-        "Range",
-        " K",
-        cfg.min_color_temp,
-        cfg.max_color_temp,
-        KELVIN_MIN,
-        KELVIN_MAX,
-        50,
-        (lo, hi) =>
-          this._patchLight(entityId, { min_color_temp: lo, max_color_temp: hi }),
-        kelvinGradientCss(KELVIN_MIN, KELVIN_MAX)
-      )}
-      ${this._renderBulbRangeReset(entityId, cfg)}
+      ${hasColor(this._lightInfo(entityId))
+        ? html`${sectionHeading("Color temperature")}
+          ${minMaxField(
+            "Range",
+            " K",
+            cfg.min_color_temp,
+            cfg.max_color_temp,
+            KELVIN_MIN,
+            KELVIN_MAX,
+            50,
+            (lo, hi) =>
+              this._patchLight(entityId, {
+                min_color_temp: lo,
+                max_color_temp: hi,
+              }),
+            kelvinGradientCss(KELVIN_MIN, KELVIN_MAX)
+          )}
+          ${this._renderBulbRangeReset(entityId, cfg)}`
+        : nothing}
       ${sectionHeading(
         "Behaviour",
         "Cap keeps the light tracking the sun, clamped into its range; Scale " +

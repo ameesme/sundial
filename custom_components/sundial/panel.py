@@ -122,12 +122,17 @@ def _lights_payload(hass: HomeAssistant, coordinator: SundialCoordinator) -> lis
             if area_id and (area := area_reg.async_get_area(area_id)):
                 area_name = area.name
         attrs = state.attributes if state else {}
+        _, supports_color_temp, supports_rgb = coordinator.supported_modes(entity_id)
         lights.append(
             {
                 "entity_id": entity_id,
                 "name": state.name if state else entity_id,
                 "area_name": area_name,
-                "supports_rgb": coordinator.supports_rgb(entity_id),
+                "supports_rgb": supports_rgb,
+                # A light that can render neither a colour temperature nor an
+                # RGB colour only takes brightness — the editor hides its
+                # colour controls and the timeline drops the warmth colouring.
+                "supports_color_temp": supports_color_temp,
                 # The bulb's own supported colour-temperature range (None for
                 # RGB-only lights or while unavailable) — the editor uses it
                 # as the default bounds.

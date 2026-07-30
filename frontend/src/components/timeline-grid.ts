@@ -9,7 +9,7 @@ import type {
   TimelineCell,
   TimelineData,
 } from "../types";
-import { HOURS, currentHour, hourLabel, kelvinToCss } from "../utils";
+import { HOURS, currentHour, hasColor, hourLabel, kelvinToCss } from "../utils";
 
 export interface CellRef {
   entityId: string;
@@ -551,8 +551,13 @@ export class TimelineGrid extends LitElement {
           const selected =
             this.selected?.entityId === light.entity_id &&
             this.selected?.hour === h;
-          return this._cell(cell, "", Boolean(cell?.explicit), selected, () =>
-            this._emit("select-cell", { entityId: light.entity_id, hour: h })
+          return this._cell(
+            cell,
+            "",
+            Boolean(cell?.explicit),
+            selected,
+            () => this._emit("select-cell", { entityId: light.entity_id, hour: h }),
+            !hasColor(light)
           );
         })}
         ${this._playhead()}
@@ -583,15 +588,20 @@ export class TimelineGrid extends LitElement {
     extra: string,
     explicit: boolean,
     selected: boolean,
-    onClick?: () => void
+    onClick?: () => void,
+    // Brightness-only light: paint every hour the same, so the row doesn't
+    // imply a warmth curve the bulb can't produce.
+    colorless = false
   ): TemplateResult {
     const brightness = cell ? cell.brightness : 0;
     const rgb = cell && "rgb_color" in cell ? cell.rgb_color : null;
     const color = !cell
       ? "transparent"
-      : rgb
-        ? `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
-        : kelvinToCss(cell.color_temp);
+      : colorless
+        ? "var(--accent)"
+        : rgb
+          ? `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
+          : kelvinToCss(cell.color_temp);
     const classes = [
       "cell",
       extra,
