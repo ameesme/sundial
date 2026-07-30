@@ -47,8 +47,24 @@ jobs:
           cd custom_components/sundial
           zip -r "$GITHUB_WORKSPACE/sundial.zip" .
 
+      # HACS decides whether to hide a release from everyone but opted-in
+      # testers from GitHub's prerelease flag, not from the version string —
+      # and action-gh-release never infers that flag from the tag name. So
+      # anything that isn't a plain vX.Y.Z is published as a pre-release;
+      # without this a v2.1.0b1 tag would reach every user as a stable one.
+      - name: Detect pre-release tag
+        id: prerelease
+        run: |
+          if [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "value=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Publishing $GITHUB_REF_NAME as a pre-release."
+          fi
+
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:
           files: sundial.zip
           generate_release_notes: true
+          prerelease: ${{ steps.prerelease.outputs.value }}

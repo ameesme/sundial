@@ -31,6 +31,7 @@ import type {
   HourCell,
   LightConfig,
   Schema,
+  StatusPayload,
   SunConfig,
   TimelineData,
 } from "../types";
@@ -48,6 +49,7 @@ import "./timeline-grid";
 import "./row-preview";
 import "./sun-config";
 import "./settings-tab";
+import "./status-section";
 
 type Selection =
   | { kind: "cell"; ref: CellRef }
@@ -406,10 +408,15 @@ export class SchemaEditor extends LitElement {
   @state() private _sel: Selection = null;
   @state() private _previewHour = currentHour();
   @state() private _isMobile = false;
+  @state() private _status: StatusPayload | null = null;
+  // Whether the Status section is expanded — kept on the editor so it stays
+  // open while stepping between lights.
+  @state() private _statusOpen = false;
 
   private _previewTimer?: number;
   private _saveTimer?: number;
   private _timelineTimer?: number;
+  private _statusTimer?: number;
   private _mql?: MediaQueryList;
   private readonly _onMqChange = (e: MediaQueryListEvent): void => {
     this._isMobile = e.matches;
@@ -460,6 +467,7 @@ export class SchemaEditor extends LitElement {
     this._flushSave();
     window.clearTimeout(this._previewTimer);
     window.clearTimeout(this._timelineTimer);
+    this._stopStatusPolling();
     this._mql?.removeEventListener("change", this._onMqChange);
     super.disconnectedCallback();
   }
@@ -475,6 +483,44 @@ export class SchemaEditor extends LitElement {
       drawer.getBoundingClientRect();
       drawer.classList.add("shown");
     }
+  }
+
+  // --- live status ---------------------------------------------------------
+
+  // Polled for as long as the editor is mounted: the Status section needs it
+  // while a sheet is open, and the timeline's per-row on/off + auto/manual
+  // tags need it all the time.
+  protected override firstUpdated(): void {
+    void this._loadStatus();
+    this._statusTimer = window.setInterval(() => void this._loadStatus(), 2000);
+  }
+
+  private _stopStatusPolling(): void {
+    if (this._statusTimer !== undefined) {
+      window.clearInterval(this._statusTimer);
+      this._statusTimer = undefined;
+    }
+  }
+
+  private async _loadStatus(): Promise<void> {
+    try {
+      this._status = await this.api.status();
+    } catch {
+      // A dropped connection shouldn't spam; the next tick tries again.
+    }
+  }
+
+  private _renderStatus(entityId: string | null): TemplateResult {
+    return html`<sundial-status-section
+      .status=${this._status}
+      .entityId=${entityId}
+      .api=${this.api}
+      .open=${this._statusOpen}
+      @status-toggle=${(e: CustomEvent<boolean>) =>
+        (this._statusOpen = e.detail)}
+      @status-changed=${(e: CustomEvent<StatusPayload>) =>
+        (this._status = e.detail)}
+    ></sundial-status-section>`;
   }
 
   // Render/preview the *draft* (unsaved) schema so edits are visible live.
@@ -626,6 +672,7 @@ export class SchemaEditor extends LitElement {
           <sundial-timeline-grid
             .lights=${this.config.lights}
             .timeline=${this._timeline}
+            .status=${this._status}
             .selected=${this._sel?.kind === "cell" ? this._sel.ref : null}
             .selectedRow=${this._selectedRow}
             .previewHour=${this._previewHour}
@@ -860,15 +907,19 @@ export class SchemaEditor extends LitElement {
           @sun-changed=${(e: CustomEvent<SunConfig>) =>
             this._patchSchema({ sun: e.detail })}
         ></sundial-sun-config>
+        ${this._renderStatus(null)}
       `;
     }
     if (sel?.kind === "light") {
       return html`
         ${this._renderRowPreview(this._timeline?.lights[sel.entityId])}
-        ${this._renderLightEditor(sel.entityId)}
+        ${this._renderLightEditor(sel.entityId)} ${this._renderStatus(sel.entityId)}
       `;
     }
-    if (sel?.kind === "cell") return this._renderCellEditor(sel.ref);
+    if (sel?.kind === "cell") {
+      return html`${this._renderCellEditor(sel.ref)}
+      ${this._renderStatus(sel.ref.entityId)}`;
+    }
     return html`<sundial-settings-tab
       .config=${this.config}
       .api=${this.api}

@@ -126,4 +126,12 @@ production. The harness is dev-only: `vite build` bundles only `src/`, so
 - Releasing: bump `version` in `manifest.json`, then tag `vX.Y.Z`. The release
   workflow asserts the tag matches the manifest version and that the committed
   bundle is current.
+- Betas: use a `vX.Y.Zb1` tag (matching manifest version). Anything that isn't a
+  plain `vX.Y.Z` is published with GitHub's **pre-release** flag, which is what
+  HACS filters on — testers opt in per repository with HACS's "Pre-release"
+  switch entity. Marking it is the workflow's job; the version string alone
+  doesn't hide anything.
 - Distributed via HACS as a custom repository; `single_config_entry` is true.
+  HACS installs `custom_components/sundial/` from the tag tree — the
+  `sundial.zip` release asset is for manual installs only (it would need
+  `zip_release` + `filename` in `hacs.json` for HACS to use it).
