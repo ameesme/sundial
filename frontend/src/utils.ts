@@ -1,4 +1,4 @@
-import type { LightConfig, Schema, SunConfig } from "./types";
+import type { LightConfig, LightInfo, Schema, SunConfig } from "./types";
 
 export const HOURS = Array.from({ length: 24 }, (_, h) => h);
 
@@ -40,6 +40,16 @@ export function defaultLightConfig(): LightConfig {
 
 export function defaultSchema(id: string, name: string): Schema {
   return { id, name, sun: defaultSunConfig(), lights: {} };
+}
+
+// Whether a light can render colour at all. RGB-only lights count: the
+// integration renders their colour temperature as RGB (kelvin_to_rgb), so the
+// temperature controls still drive what they do. Only a light that supports
+// neither takes brightness alone. Unknown lights are assumed colour-capable so
+// the controls don't flicker away before the config lands.
+export function hasColor(light: LightInfo | undefined): boolean {
+  if (!light) return true;
+  return light.supports_color_temp || light.supports_rgb;
 }
 
 // Rough Kelvin -> CSS color, used for the timeline swatches.

@@ -64,14 +64,18 @@ export class RowPreview extends LitElement {
   `;
 
   @property({ attribute: false }) cells: PreviewCell[] = [];
+  /** Brightness-only light: colour would imply a warmth curve it can't do. */
+  @property({ type: Boolean }) colorless = false;
 
   override render(): TemplateResult {
     return html`<div class="strip">
       ${this.cells.map((cell) => {
         const rgb = cell.rgb_color;
-        const color = rgb
-          ? `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
-          : kelvinToCss(cell.color_temp);
+        const color = this.colorless
+          ? "var(--accent-light)"
+          : rgb
+            ? `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
+            : kelvinToCss(cell.color_temp);
         return html`<div class="cell ${cell.explicit ? "explicit" : ""}">
           <div
             class="fill"

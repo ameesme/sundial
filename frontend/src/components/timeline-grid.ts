@@ -9,7 +9,7 @@ import type {
   TimelineCell,
   TimelineData,
 } from "../types";
-import { HOURS, currentHour, hourLabel, kelvinToCss } from "../utils";
+import { HOURS, currentHour, hasColor, hourLabel, kelvinToCss } from "../utils";
 
 export interface CellRef {
   entityId: string;
@@ -130,37 +130,33 @@ export class TimelineGrid extends LitElement {
         flex: none;
         opacity: 0.4;
       }
-      /* Live power/control state beside the name. No vertical padding and
-         line-height 1 keep every tag inside the row's existing line box, so
-         adding them can't change a row's height. */
-      .tags {
-        display: flex;
-        flex: none;
-        gap: 3px;
-      }
+      /* Live state beside the name — the same pill the Status sheet uses for
+         Automatic/Manual. line-height 1.5 with 1px vertical padding keeps it
+         inside the row's existing line box, so it can't change a row's
+         height. */
       .tag {
-        padding: 0 4px;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        font-size: 0.58rem;
+        flex: none;
+        /* No vertical padding: the pill has to stay shorter than the name's
+           own line box, or it grows the row (it is its own line on mobile). */
+        padding: 0 8px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-size: 0.62rem;
         font-weight: 700;
-        line-height: 1.45;
+        line-height: 1.5;
         letter-spacing: 0.04em;
         text-transform: uppercase;
+      }
+      .tag.manual {
+        background: var(--danger);
+        color: var(--surface);
+      }
+      /* Off/unavailable: the light isn't being driven, so keep it quiet. */
+      .tag.idle {
+        background: transparent;
         color: var(--text-soft);
-        opacity: 0.75;
-      }
-      /* Only the states worth noticing carry colour; on + auto is the norm. */
-      .tag.on {
-        border-color: var(--accent);
-        color: var(--accent-strong);
-        opacity: 1;
-      }
-      .tag.manual,
-      .tag.unknown {
-        border-color: var(--danger);
-        color: var(--danger);
-        opacity: 1;
+        box-shadow: inset 0 0 0 1px var(--border);
       }
       .label.clickable:hover svg {
         opacity: 0.9;
@@ -543,7 +539,7 @@ export class TimelineGrid extends LitElement {
         <span class="text-col">
           <span class="lname">${light.name}</span>
         </span>
-        ${this._statusTags(light.entity_id)} ${cogFilledIcon}
+        ${this._statusTag(light.entity_id)} ${cogFilledIcon}
       </div>
       <div class="cells">
         ${HOURS.map((h) => {
@@ -551,8 +547,13 @@ export class TimelineGrid extends LitElement {
           const selected =
             this.selected?.entityId === light.entity_id &&
             this.selected?.hour === h;
-          return this._cell(cell, "", Boolean(cell?.explicit), selected, () =>
-            this._emit("select-cell", { entityId: light.entity_id, hour: h })
+          return this._cell(
+            cell,
+            "",
+            Boolean(cell?.explicit),
+            selected,
+            () => this._emit("select-cell", { entityId: light.entity_id, hour: h }),
+            !hasColor(light)
           );
         })}
         ${this._playhead()}
@@ -560,22 +561,20 @@ export class TimelineGrid extends LitElement {
     </div>`;
   }
 
-  // Power and control state beside the name. Sized off the row's own line box
-  // (no vertical padding, line-height 1) so a row is exactly as tall with tags
-  // as without. Absent while the first status poll is in flight.
-  private _statusTags(entityId: string): TemplateResult | typeof nothing {
+  // One pill beside the name. A light that's off or unavailable isn't being
+  // driven, so its control mode says nothing useful — show the power state
+  // instead. An on light is the reverse: "on" is evident from the row, the
+  // mode isn't. Absent while the first status poll is in flight.
+  private _statusTag(entityId: string): TemplateResult | typeof nothing {
     const light = this.status?.lights[entityId];
     if (!light) return nothing;
-    const on = light.state === "on";
-    const off = light.state === "off";
-    return html`<span class="tags">
-      <span class="tag ${on ? "on" : off ? "off" : "unknown"}">
-        ${on ? "On" : off ? "Off" : "N/A"}
-      </span>
-      <span class="tag ${light.manual_control ? "manual" : "auto"}">
-        ${light.manual_control ? "Manual" : "Auto"}
-      </span>
-    </span>`;
+    if (light.state !== "on") {
+      const off = light.state === "off";
+      return html`<span class="tag idle">${off ? "Off" : "Unavailable"}</span>`;
+    }
+    return light.manual_control
+      ? html`<span class="tag manual">Manual</span>`
+      : html`<span class="tag">Auto</span>`;
   }
 
   private _cell(
@@ -583,15 +582,20 @@ export class TimelineGrid extends LitElement {
     extra: string,
     explicit: boolean,
     selected: boolean,
-    onClick?: () => void
+    onClick?: () => void,
+    // Brightness-only light: paint every hour the same, so the row doesn't
+    // imply a warmth curve the bulb can't produce.
+    colorless = false
   ): TemplateResult {
     const brightness = cell ? cell.brightness : 0;
     const rgb = cell && "rgb_color" in cell ? cell.rgb_color : null;
     const color = !cell
       ? "transparent"
-      : rgb
-        ? `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
-        : kelvinToCss(cell.color_temp);
+      : colorless
+        ? "var(--accent-light)"
+        : rgb
+          ? `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
+          : kelvinToCss(cell.color_temp);
     const classes = [
       "cell",
       extra,
