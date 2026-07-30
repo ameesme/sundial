@@ -33,6 +33,9 @@ export const infoIcon = icon(
   "M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"
 );
 
+// Disclosure marker for collapsible sections; rotated 180° when open.
+export const chevronIcon = icon("M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z");
+
 // Filled variant for tiny sizes (e.g. the 12px row-label cogs) where the
 // outline strokes turn to mush.
 export const cogFilledIcon = icon(

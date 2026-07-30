@@ -2,6 +2,7 @@ import { LitElement, css, html, nothing, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import type { SundialApi } from "../api";
+import { chevronIcon } from "../icons";
 import { baseStyles } from "../theme";
 import type {
   LightOutcome,
@@ -73,6 +74,14 @@ export class StatusSection extends LitElement {
   static override styles = [
     baseStyles,
     css`
+      /* The chevron points down when collapsed, up when expanded. baseStyles
+         already sizes and tints summary svg. */
+      details.section summary svg {
+        transition: transform 0.15s ease;
+      }
+      details.section[open] summary svg {
+        transform: rotate(180deg);
+      }
       /* The <details> carries .section's uppercase heading styling; only the
          summary should keep it, so undo it for the body (same trick as the
          details.section p rule in baseStyles). */
@@ -153,7 +162,7 @@ export class StatusSection extends LitElement {
       ?open=${this.open}
       @toggle=${this._onToggle}
     >
-      <summary>Status</summary>
+      <summary>Status ${chevronIcon}</summary>
       ${this.status
         ? this.entityId
           ? this._renderLight(this.entityId)

@@ -476,28 +476,21 @@ export class SchemaEditor extends LitElement {
   // it as a modal (backdrop, Esc, focus trap for free) right after render.
   // The forced reflow between showModal and .shown makes the off-screen
   // start state stick, so the class change transitions instead of snapping.
-  protected override updated(changed: PropertyValues): void {
+  protected override updated(): void {
     const drawer = this.renderRoot.querySelector<HTMLDialogElement>("dialog.drawer");
     if (drawer && !drawer.open) {
       drawer.showModal();
       drawer.getBoundingClientRect();
       drawer.classList.add("shown");
     }
-    if (changed.has("_sel")) this._syncStatusPolling();
   }
 
   // --- live status ---------------------------------------------------------
 
-  // The Status section is only worth polling while a sun/light/cell sheet is
-  // open; the settings sheet and the bare timeline don't show one.
-  private _syncStatusPolling(): void {
-    const wanted = this._sel !== null && this._sel.kind !== "settings";
-    if (!wanted) {
-      this._stopStatusPolling();
-      this._status = null;
-      return;
-    }
-    if (this._statusTimer !== undefined) return; // already polling
+  // Polled for as long as the editor is mounted: the Status section needs it
+  // while a sheet is open, and the timeline's per-row on/off + auto/manual
+  // tags need it all the time.
+  protected override firstUpdated(): void {
     void this._loadStatus();
     this._statusTimer = window.setInterval(() => void this._loadStatus(), 2000);
   }
@@ -679,6 +672,7 @@ export class SchemaEditor extends LitElement {
           <sundial-timeline-grid
             .lights=${this.config.lights}
             .timeline=${this._timeline}
+            .status=${this._status}
             .selected=${this._sel?.kind === "cell" ? this._sel.ref : null}
             .selectedRow=${this._selectedRow}
             .previewHour=${this._previewHour}

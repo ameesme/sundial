@@ -3,7 +3,12 @@ import { customElement, property } from "lit/decorators.js";
 
 import { cogFilledIcon } from "../icons";
 import { baseStyles } from "../theme";
-import type { LightInfo, TimelineCell, TimelineData } from "../types";
+import type {
+  LightInfo,
+  StatusPayload,
+  TimelineCell,
+  TimelineData,
+} from "../types";
 import { HOURS, currentHour, hourLabel, kelvinToCss } from "../utils";
 
 export interface CellRef {
@@ -41,7 +46,8 @@ export class TimelineGrid extends LitElement {
       }
       .gridrow {
         display: grid;
-        grid-template-columns: 160px 1fr;
+        /* Wide enough that the state tags don't eat into the light name. */
+        grid-template-columns: 230px 1fr;
         gap: 1px;
         align-items: center;
       }
@@ -123,6 +129,38 @@ export class TimelineGrid extends LitElement {
         height: 12px;
         flex: none;
         opacity: 0.4;
+      }
+      /* Live power/control state beside the name. No vertical padding and
+         line-height 1 keep every tag inside the row's existing line box, so
+         adding them can't change a row's height. */
+      .tags {
+        display: flex;
+        flex: none;
+        gap: 3px;
+      }
+      .tag {
+        padding: 0 4px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-size: 0.58rem;
+        font-weight: 700;
+        line-height: 1.45;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--text-soft);
+        opacity: 0.75;
+      }
+      /* Only the states worth noticing carry colour; on + auto is the norm. */
+      .tag.on {
+        border-color: var(--accent);
+        color: var(--accent-strong);
+        opacity: 1;
+      }
+      .tag.manual,
+      .tag.unknown {
+        border-color: var(--danger);
+        color: var(--danger);
+        opacity: 1;
       }
       .label.clickable:hover svg {
         opacity: 0.9;
@@ -333,6 +371,7 @@ export class TimelineGrid extends LitElement {
 
   @property({ attribute: false }) lights: LightInfo[] = [];
   @property({ attribute: false }) timeline?: TimelineData;
+  @property({ attribute: false }) status: StatusPayload | null = null;
   @property({ attribute: false }) selected: CellRef | null = null;
   // "sun" or an entity_id — the row to highlight as selected.
   @property({ attribute: false }) selectedRow: string | null = null;
@@ -504,7 +543,7 @@ export class TimelineGrid extends LitElement {
         <span class="text-col">
           <span class="lname">${light.name}</span>
         </span>
-        ${cogFilledIcon}
+        ${this._statusTags(light.entity_id)} ${cogFilledIcon}
       </div>
       <div class="cells">
         ${HOURS.map((h) => {
@@ -519,6 +558,24 @@ export class TimelineGrid extends LitElement {
         ${this._playhead()}
       </div>
     </div>`;
+  }
+
+  // Power and control state beside the name. Sized off the row's own line box
+  // (no vertical padding, line-height 1) so a row is exactly as tall with tags
+  // as without. Absent while the first status poll is in flight.
+  private _statusTags(entityId: string): TemplateResult | typeof nothing {
+    const light = this.status?.lights[entityId];
+    if (!light) return nothing;
+    const on = light.state === "on";
+    const off = light.state === "off";
+    return html`<span class="tags">
+      <span class="tag ${on ? "on" : off ? "off" : "unknown"}">
+        ${on ? "On" : off ? "Off" : "N/A"}
+      </span>
+      <span class="tag ${light.manual_control ? "manual" : "auto"}">
+        ${light.manual_control ? "Manual" : "Auto"}
+      </span>
+    </span>`;
   }
 
   private _cell(
