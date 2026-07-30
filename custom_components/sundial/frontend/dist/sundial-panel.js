@@ -75,7 +75,7 @@ const { is: ie, defineProperty: se, getOwnPropertyDescriptor: ne, getOwnProperty
   return i;
 } }, bt = (e, t) => !ie(e, t), Ct = { attribute: !0, type: String, converter: st, reflect: !1, useDefault: !1, hasChanged: bt };
 Symbol.metadata ??= Symbol("metadata"), lt.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-let z = class extends HTMLElement {
+let N = class extends HTMLElement {
   static addInitializer(t) {
     this._$Ei(), (this.l ??= []).push(t);
   }
@@ -256,7 +256,7 @@ let z = class extends HTMLElement {
   firstUpdated(t) {
   }
 };
-z.elementStyles = [], z.shadowRootOptions = { mode: "open" }, z[q("elementProperties")] = /* @__PURE__ */ new Map(), z[q("finalized")] = /* @__PURE__ */ new Map(), ce?.({ ReactiveElement: z }), (lt.reactiveElementVersions ??= []).push("2.1.2");
+N.elementStyles = [], N.shadowRootOptions = { mode: "open" }, N[q("elementProperties")] = /* @__PURE__ */ new Map(), N[q("finalized")] = /* @__PURE__ */ new Map(), ce?.({ ReactiveElement: N }), (lt.reactiveElementVersions ??= []).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -493,7 +493,7 @@ const $e = (e, t, i) => {
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const xt = globalThis;
-class $ extends z {
+class $ extends N {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
   }
@@ -654,6 +654,9 @@ const Ce = E`
     --text-soft: #836a52;
     --accent: #c8743a;
     --accent-strong: #a8521f;
+    /* Between --accent and --accent-soft: bright enough to read as a fill,
+       light enough to sit alongside the Kelvin-tinted timeline cells. */
+    --accent-light: #eda874;
     --accent-soft: #f0dcc3;
     --danger: #9c3b2e;
     --radius: 12px;
@@ -1140,9 +1143,9 @@ function ft() {
 }
 const x = (e) => a`<svg viewBox="0 0 24 24" aria-hidden="true">
     <path fill="currentColor" d=${e} />
-  </svg>`, Rt = x("M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"), Nt = x(
+  </svg>`, Rt = x("M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"), zt = x(
   "M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M12,4.5C17,4.5 21.27,7.61 23,12C21.27,16.39 17,19.5 12,19.5C7,19.5 2.73,16.39 1,12C2.73,7.61 7,4.5 12,4.5M3.18,12C4.83,15.36 8.24,17.5 12,17.5C15.76,17.5 19.17,15.36 20.82,12C19.17,8.64 15.76,6.5 12,6.5C8.24,6.5 4.83,8.64 3.18,12Z"
-), zt = x(
+), Nt = x(
   "M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"
 ), Dt = x(
   "M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"
@@ -1152,7 +1155,7 @@ const x = (e) => a`<svg viewBox="0 0 24 24" aria-hidden="true">
   "M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"
 ), Re = x(
   "M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"
-), Ne = x("M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"), It = x(
+), ze = x("M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"), It = x(
   "M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54a7 7 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.31 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96a7 7 0 0 0 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54a7 7 0 0 0 1.62-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"
 ), jt = x(
   "M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M10,22C9.75,22 9.54,21.82 9.5,21.58L9.13,18.93C8.5,18.68 7.96,18.34 7.44,17.94L4.95,18.95C4.73,19.03 4.46,18.95 4.34,18.73L2.34,15.27C2.21,15.05 2.27,14.78 2.46,14.63L4.57,12.97L4.5,12L4.57,11L2.46,9.37C2.27,9.22 2.21,8.95 2.34,8.73L4.34,5.27C4.46,5.05 4.73,4.96 4.95,5.05L7.44,6.05C7.96,5.66 8.5,5.32 9.13,5.07L9.5,2.42C9.54,2.18 9.75,2 10,2H14C14.25,2 14.46,2.18 14.5,2.42L14.87,5.07C15.5,5.32 16.04,5.66 16.56,6.05L19.05,5.05C19.27,4.96 19.54,5.05 19.66,5.27L21.66,8.73C21.79,8.95 21.73,9.22 21.54,9.37L19.43,11L19.5,12L19.43,13L21.54,14.63C21.73,14.78 21.79,15.05 21.66,15.27L19.66,18.73C19.54,18.95 19.27,19.04 19.05,18.95L16.56,17.95C16.04,18.34 15.5,18.68 14.87,18.93L14.5,21.58C14.46,21.82 14.25,22 14,22H10M11.25,4L10.88,6.61C9.68,6.86 8.62,7.5 7.85,8.39L5.44,7.35L4.69,8.65L6.8,10.2C6.4,11.37 6.4,12.64 6.8,13.8L4.68,15.36L5.43,16.66L7.86,15.62C8.63,16.5 9.68,17.14 10.87,17.38L11.24,20H12.76L13.13,17.39C14.32,17.14 15.37,16.5 16.14,15.62L18.57,16.66L19.32,15.36L17.2,13.81C17.6,12.64 17.6,11.37 17.2,10.2L19.31,8.65L18.56,7.35L16.15,8.39C15.38,7.5 14.32,6.86 13.12,6.62L12.75,4H11.25Z"
@@ -1227,7 +1230,7 @@ function V(e, t, i, s, n, r) {
     <span class="duration-preview">${o}</span>
   </label>`;
 }
-function ze(e, t, i) {
+function Ne(e, t, i) {
   return a`<label class="field"
     >${e}
     <input
@@ -1445,7 +1448,7 @@ let w = class extends $ {
         <span class="text-col">
           <span class="lname">${e.name}</span>
         </span>
-        ${this._statusTags(e.entity_id)} ${It}
+        ${this._statusTag(e.entity_id)} ${It}
       </div>
       <div class="cells">
         ${ut.map((s) => {
@@ -1463,24 +1466,21 @@ let w = class extends $ {
       </div>
     </div>`;
   }
-  // Power and control state beside the name. Sized off the row's own line box
-  // (no vertical padding, line-height 1) so a row is exactly as tall with tags
-  // as without. Absent while the first status poll is in flight.
-  _statusTags(e) {
+  // One pill beside the name. A light that's off or unavailable isn't being
+  // driven, so its control mode says nothing useful — show the power state
+  // instead. An on light is the reverse: "on" is evident from the row, the
+  // mode isn't. Absent while the first status poll is in flight.
+  _statusTag(e) {
     const t = this.status?.lights[e];
     if (!t) return d;
-    const i = t.state === "on", s = t.state === "off";
-    return a`<span class="tags">
-      <span class="tag ${i ? "on" : s ? "off" : "unknown"}">
-        ${i ? "On" : s ? "Off" : "N/A"}
-      </span>
-      <span class="tag ${t.manual_control ? "manual" : "auto"}">
-        ${t.manual_control ? "Manual" : "Auto"}
-      </span>
-    </span>`;
+    if (t.state !== "on") {
+      const i = t.state === "off";
+      return a`<span class="tag idle">${i ? "Off" : "Unavailable"}</span>`;
+    }
+    return t.manual_control ? a`<span class="tag manual">Manual</span>` : a`<span class="tag">Auto</span>`;
   }
   _cell(e, t, i, s, n, r = !1) {
-    const o = e ? e.brightness : 0, c = e && "rgb_color" in e ? e.rgb_color : null, l = e ? r ? "var(--accent)" : c ? `rgb(${c[0]}, ${c[1]}, ${c[2]})` : dt(e.color_temp) : "transparent", p = [
+    const o = e ? e.brightness : 0, c = e && "rgb_color" in e ? e.rgb_color : null, l = e ? r ? "var(--accent-light)" : c ? `rgb(${c[0]}, ${c[1]}, ${c[2]})` : dt(e.color_temp) : "transparent", p = [
       "cell",
       t,
       i ? "explicit" : "",
@@ -1605,37 +1605,33 @@ w.styles = [
         flex: none;
         opacity: 0.4;
       }
-      /* Live power/control state beside the name. No vertical padding and
-         line-height 1 keep every tag inside the row's existing line box, so
-         adding them can't change a row's height. */
-      .tags {
-        display: flex;
-        flex: none;
-        gap: 3px;
-      }
+      /* Live state beside the name — the same pill the Status sheet uses for
+         Automatic/Manual. line-height 1.5 with 1px vertical padding keeps it
+         inside the row's existing line box, so it can't change a row's
+         height. */
       .tag {
-        padding: 0 4px;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        font-size: 0.58rem;
+        flex: none;
+        /* No vertical padding: the pill has to stay shorter than the name's
+           own line box, or it grows the row (it is its own line on mobile). */
+        padding: 0 8px;
+        border-radius: 999px;
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+        font-size: 0.62rem;
         font-weight: 700;
-        line-height: 1.45;
+        line-height: 1.5;
         letter-spacing: 0.04em;
         text-transform: uppercase;
+      }
+      .tag.manual {
+        background: var(--danger);
+        color: var(--surface);
+      }
+      /* Off/unavailable: the light isn't being driven, so keep it quiet. */
+      .tag.idle {
+        background: transparent;
         color: var(--text-soft);
-        opacity: 0.75;
-      }
-      /* Only the states worth noticing carry colour; on + auto is the norm. */
-      .tag.on {
-        border-color: var(--accent);
-        color: var(--accent-strong);
-        opacity: 1;
-      }
-      .tag.manual,
-      .tag.unknown {
-        border-color: var(--danger);
-        color: var(--danger);
-        opacity: 1;
+        box-shadow: inset 0 0 0 1px var(--border);
       }
       .label.clickable:hover svg {
         opacity: 0.9;
@@ -1882,7 +1878,7 @@ let J = class extends $ {
   render() {
     return a`<div class="strip">
       ${this.cells.map((e) => {
-      const t = e.rgb_color, i = this.colorless ? "var(--accent)" : t ? `rgb(${t[0]}, ${t[1]}, ${t[2]})` : dt(e.color_temp);
+      const t = e.rgb_color, i = this.colorless ? "var(--accent-light)" : t ? `rgb(${t[0]}, ${t[1]}, ${t[2]})` : dt(e.color_temp);
       return a`<div class="cell ${e.explicit ? "explicit" : ""}">
           <div
             class="fill"
@@ -2169,7 +2165,7 @@ let j = class extends $ {
       "Gap between the two turn-on calls for lights that get brightness and colour sent separately (e.g. IKEA)."
     )}
       <div class="grid">
-        ${ze(
+        ${Ne(
       "Split-command delay (ms)",
       e.send_split_delay,
       (i) => t({ send_split_delay: i })
@@ -2295,7 +2291,7 @@ let M = class extends $ {
       ?open=${this.open}
       @toggle=${this._onToggle}
     >
-      <summary>Status ${Ne}</summary>
+      <summary>Status ${ze}</summary>
       ${this.status ? this.entityId ? this._renderLight(this.entityId) : this._renderSun() : a`<p class="muted sub">Loading…</p>`}
     </details>`;
   }
@@ -2770,7 +2766,7 @@ let f = class extends $ {
         title="Preview on lights"
         @click=${() => this._emit("preview-toggle", !this.preview)}
       >
-        ${Nt}
+        ${zt}
       </button>
       <button
         class="icon-btn ${this._active ? "active" : ""}"
@@ -2778,7 +2774,7 @@ let f = class extends $ {
         title=${this._active ? "This schema is active" : "Apply this schema"}
         @click=${this._setActive}
       >
-        ${zt}
+        ${Nt}
       </button>
       <button
         class="icon-btn plain"
@@ -2792,7 +2788,7 @@ let f = class extends $ {
           class="btn ${this.preview ? "" : "ghost"}"
           @click=${() => this._emit("preview-toggle", !this.preview)}
         >
-          ${Nt} Preview
+          ${zt} Preview
         </button>
         <button
           class="btn ghost"
@@ -2800,7 +2796,7 @@ let f = class extends $ {
           title=${this._active ? "This schema is active" : "Apply this schema"}
           @click=${this._setActive}
         >
-          ${zt} ${this._active ? "Active" : "Apply"}
+          ${Nt} ${this._active ? "Active" : "Apply"}
         </button>
         <button
           class="btn plain"
@@ -3449,7 +3445,7 @@ b([
 f = b([
   R("sundial-schema-editor")
 ], f);
-var Qe = Object.defineProperty, ti = Object.getOwnPropertyDescriptor, N = (e, t, i, s) => {
+var Qe = Object.defineProperty, ti = Object.getOwnPropertyDescriptor, z = (e, t, i, s) => {
   for (var n = s > 1 ? void 0 : s ? ti(t, i) : t, r = e.length - 1, o; r >= 0; r--)
     (o = e[r]) && (n = (s ? o(t, i, n) : o(n)) || n);
   return s && n && Qe(t, i, n), n;
@@ -3569,25 +3565,25 @@ y.styles = [
       }
     `
 ];
-N([
+z([
   u({ attribute: !1 })
 ], y.prototype, "hass", 2);
-N([
+z([
   u({ attribute: !1 })
 ], y.prototype, "narrow", 2);
-N([
+z([
   v()
 ], y.prototype, "_config", 2);
-N([
+z([
   v()
 ], y.prototype, "_error", 2);
-N([
+z([
   v()
 ], y.prototype, "_selectedId", 2);
-N([
+z([
   v()
 ], y.prototype, "_preview", 2);
-y = N([
+y = z([
   R("sundial-panel")
 ], y);
 export {

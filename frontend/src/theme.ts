@@ -12,6 +12,9 @@ export const tokenStyles = css`
     --text-soft: #836a52;
     --accent: #c8743a;
     --accent-strong: #a8521f;
+    /* Between --accent and --accent-soft: bright enough to read as a fill,
+       light enough to sit alongside the Kelvin-tinted timeline cells. */
+    --accent-light: #eda874;
     --accent-soft: #f0dcc3;
     --danger: #9c3b2e;
     --radius: 12px;

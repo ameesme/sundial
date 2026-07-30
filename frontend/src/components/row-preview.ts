@@ -72,7 +72,7 @@ export class RowPreview extends LitElement {
       ${this.cells.map((cell) => {
         const rgb = cell.rgb_color;
         const color = this.colorless
-          ? "var(--accent)"
+          ? "var(--accent-light)"
           : rgb
             ? `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
             : kelvinToCss(cell.color_temp);
