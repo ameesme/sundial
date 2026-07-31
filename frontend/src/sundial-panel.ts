@@ -83,8 +83,32 @@ export class SundialPanel extends LitElement {
 
   private _api?: SundialApi;
   private _loaded = false;
+  private _mqDark?: MediaQueryList;
+  private readonly _onSchemeChange = (): void => this._syncTheme();
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this._mqDark = window.matchMedia("(prefers-color-scheme: dark)");
+    this._mqDark.addEventListener("change", this._onSchemeChange);
+    this._syncTheme();
+  }
+
+  override disconnectedCallback(): void {
+    this._mqDark?.removeEventListener("change", this._onSchemeChange);
+    super.disconnectedCallback();
+  }
+
+  // Home Assistant's own dark mode wins; the OS preference is the fallback
+  // for the dev harness (and for a hass that doesn't report themes yet).
+  // The attribute lands on this host, where the tokens live, so every child
+  // picks the palette up through custom-property inheritance.
+  private _syncTheme(): void {
+    const dark = this.hass?.themes?.darkMode ?? this._mqDark?.matches ?? false;
+    this.toggleAttribute("dark", dark);
+  }
 
   protected override updated(): void {
+    this._syncTheme();
     if (!this.hass) return;
     if (!this._api) {
       this._api = new SundialApi(this.hass);

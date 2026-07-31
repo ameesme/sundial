@@ -149,7 +149,7 @@ export class SchemaEditor extends LitElement {
       .icon-btn.active {
         background: var(--accent);
         border-color: var(--accent);
-        color: #fff8ef;
+        color: var(--on-accent);
       }
       .icon-btn.danger {
         color: var(--danger);

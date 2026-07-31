@@ -199,4 +199,7 @@ export interface HomeAssistant {
   connection: {
     sendMessagePromise<T>(message: Record<string, unknown>): Promise<T>;
   };
+  // Present in Home Assistant; absent in the dev harness, which falls back to
+  // the OS colour-scheme preference.
+  themes?: { darkMode?: boolean };
 }

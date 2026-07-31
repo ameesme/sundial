@@ -13,21 +13,24 @@ import type {
 } from "../types";
 import { formatDuration, kelvinToCss, rgbToHex } from "../utils";
 
+// Plain-language causes. The distinction between the first two is only *how*
+// Sundial noticed — both mean someone changed the light — so they read the
+// same way, differing in whether the change announced itself.
 const MANUAL_REASONS: Record<ManualReason, string> = {
-  explicit_turn_on: "a turn_on with explicit values",
-  diverged: "the light drifted past the override thresholds",
-  turned_on_while_scheduled_off: "turned on while the schedule said off",
-  service: "the set_manual_control service or this panel",
+  explicit_turn_on: "Adjusted manually",
+  diverged: "Adjusted somewhere else",
+  turned_on_while_scheduled_off: "Switched on outside its schedule",
+  service: "Set to manual by an automation",
 };
 
 const OUTCOMES: Record<LightOutcome, string> = {
-  applied: "applied",
-  turned_off: "turned off (scheduled 0%)",
-  skipped_disabled: "skipped — adaptation disabled",
-  skipped_manual: "skipped — manual control",
-  skipped_no_state: "skipped — entity not found",
-  skipped_at_target: "skipped — already at target",
-  skipped_light_off: "skipped — light is off",
+  applied: "Updated the light",
+  turned_off: "Switched it off — scheduled 0%",
+  skipped_disabled: "Nothing to do — Sundial is switched off",
+  skipped_manual: "Left alone — under manual control",
+  skipped_no_state: "Nothing to do — light not found",
+  skipped_at_target: "Nothing to do — already correct",
+  skipped_light_off: "Nothing to do — light is off",
 };
 
 // Relative wall-clock time ("12s ago", "in 4 min") from an ISO timestamp.
@@ -215,7 +218,7 @@ export class StatusSection extends LitElement {
         ${light.manual_control
           ? html`
               ${this._row(
-                "Because of",
+                "Reason",
                 light.manual_reason
                   ? MANUAL_REASONS[light.manual_reason]
                   : "unknown"
@@ -229,7 +232,7 @@ export class StatusSection extends LitElement {
                 : nothing}
             `
           : nothing}
-        ${this._row("Entity state", light.state ?? "not found")}
+        ${this._row("Light is", light.state ?? "not found")}
         ${this._row("Target now", values(light.target))}
         ${this._row("Light reports", values(light.reported))}
         ${this._row("Color mode", light.reported.color_mode ?? "—")}
@@ -241,25 +244,25 @@ export class StatusSection extends LitElement {
             : "—"
         )}
         ${this._row(
-          "Last evaluated",
+          "Last checked",
           light.last_evaluated_at ? relative(light.last_evaluated_at, now) : "—"
         )}
         ${this._row(
-          "Outcome",
+          "Result",
           light.last_outcome ? OUTCOMES[light.last_outcome] : "—"
         )}
         ${light.settling
-          ? this._row("Settling", "yes — override detection paused")
+          ? this._row("Settling", "waiting for the light to finish fading")
           : nothing}
-        ${this._row("Can control", capabilities.join(", ") || "nothing")}
-        ${this._row("Color modes", modes)}
+        ${this._row("Sundial can set", capabilities.join(", ") || "nothing")}
+        ${this._row("Light supports", modes)}
         ${this._row(
-          "Clamp range",
+          "Allowed range",
           `${light.config.min_brightness}–${light.config.max_brightness}% · ` +
             `${light.config.min_color_temp}–${light.config.max_color_temp} K`
         )}
         ${this._row(
-          "Modes",
+          "Behaviour",
           `${light.config.limit_mode} · render ${light.config.render_mode}` +
             (light.config.separate_turn_on_commands ? " · split commands" : "")
         )}
@@ -301,11 +304,11 @@ export class StatusSection extends LitElement {
         )}
         ${this._row("Active schema", g.active_schema_name)}
         ${this._row(
-          "Timeline position",
+          "Reading the curve at",
           `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} local`
         )}
         ${this._row("Sun", sun.is_day ? "day" : "night")}
-        ${this._row("Position", sun.position.toFixed(3))}
+        ${this._row("Height in the sky", sun.position.toFixed(3))}
         ${this._row(
           "Nearest sunrise",
           `${clockTime(sun.nearest_sunrise)} · ${sun.sunrise_source}`
@@ -316,7 +319,7 @@ export class StatusSection extends LitElement {
         )}
         ${this._row("Coordinates", coords)}
         ${this._row(
-          "Drive signal",
+          "Raw signal",
           `brightness ${sun.drive.brightness.toFixed(3)} · warmth ${sun.drive.warmth.toFixed(3)}`
         )}
         ${this._row("Sun values now", values(sun.values))}
@@ -326,11 +329,11 @@ export class StatusSection extends LitElement {
         )}
         ${this._row("Next pass", relative(g.next_pass_at, now))}
         ${this._row(
-          "Timing",
+          "Runs",
           `every ${formatDuration(g.interval)} · ${g.transition}s transition`
         )}
         ${this._row(
-          "Take over control",
+          "Manual takeover",
           g.take_over_control
             ? g.autoreset_control > 0
               ? `on · auto-reset after ${formatDuration(g.autoreset_control)}`
