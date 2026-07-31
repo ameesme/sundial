@@ -17,8 +17,11 @@ export const tokenStyles = css`
     --accent-light: #eda874;
     --accent-soft: #f0dcc3;
     --danger: #9c3b2e;
+    /* Text drawn on top of an --accent fill. */
+    --on-accent: #fff8ef;
     --radius: 12px;
     --shadow: 0 2px 10px rgba(120, 80, 40, 0.12);
+    color-scheme: light;
 
     display: block;
     min-height: 100vh;
@@ -26,6 +29,30 @@ export const tokenStyles = css`
     color: var(--text);
     /* Home Assistant's own typography (Roboto), themable via its token. */
     font-family: var(--ha-font-family-body, Roboto, Noto, sans-serif);
+  }
+
+  /* Dark theme — the same warm palette rotated, not a neutral grey one, so
+     the panel still reads as Sundial. Set by <sundial-panel> from Home
+     Assistant's own dark mode, falling back to the OS preference.
+     --accent-strong inverts its relationship to --accent: it is the emphasis
+     colour for text, so on a dark ground it has to be the lighter of the two.
+     --accent-soft likewise flips from a pale tint to a dark one, since its
+     job is to be a quiet background behind accent text. */
+  :host([dark]) {
+    --bg: #17120e;
+    --surface: #211a15;
+    --surface-alt: #2a211a;
+    --border: #45362a;
+    --text: #f3e8db;
+    --text-soft: #ab947e;
+    --accent: #d9834a;
+    --accent-strong: #f0a86c;
+    --accent-light: #eda874;
+    --accent-soft: #3a2b20;
+    --danger: #e2705a;
+    --on-accent: #1b1410;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
   }
 `;
 
@@ -374,7 +401,7 @@ export const baseStyles = css`
     padding: 8px 14px;
     border: 1px solid var(--accent);
     background: var(--accent);
-    color: #fff8ef;
+    color: var(--on-accent);
   }
 
   button.btn svg {
