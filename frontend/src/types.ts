@@ -142,6 +142,13 @@ export interface LightStatus {
   last_evaluated_at: string | null;
   last_outcome: LightOutcome | null;
   settling: boolean;
+  // "group": a group whose members we can read, and narrow writes to. A
+  // Zigbee group publishes no member list, so it arrives as "light".
+  group: {
+    kind: "group" | "light";
+    members: number | null;
+    members_on: number | null;
+  };
   supports: { brightness: boolean; color_temp: boolean; rgb: boolean };
   supported_color_modes: string[];
   config: {
