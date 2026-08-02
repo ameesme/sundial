@@ -23,14 +23,16 @@ const MANUAL_REASONS: Record<ManualReason, string> = {
   service: "Set to manual by an automation",
 };
 
+// "<what happened> — <why>": an action states itself, everything Sundial
+// declined to do reads as Idle plus the reason it stood down.
 const OUTCOMES: Record<LightOutcome, string> = {
-  applied: "Updated the light",
-  turned_off: "Switched it off — scheduled 0%",
-  skipped_disabled: "Nothing to do — Sundial is switched off",
-  skipped_manual: "Left alone — under manual control",
-  skipped_no_state: "Nothing to do — light not found",
-  skipped_at_target: "Nothing to do — already correct",
-  skipped_light_off: "Nothing to do — light is off",
+  applied: "Updated because of schedule",
+  turned_off: "Turned off because of schedule",
+  skipped_disabled: "Idle — Sundial is disabled",
+  skipped_manual: "Idle — Manually controlled",
+  skipped_at_target: "Idle — Current status is correct",
+  skipped_light_off: "Idle — Light is off",
+  skipped_no_state: "Idle — Light not found",
 };
 
 // Relative wall-clock time ("12s ago", "in 4 min") from an ISO timestamp.
@@ -98,15 +100,15 @@ export class StatusSection extends LitElement {
          for a whole list of read-only rows. */
       .rows {
         display: grid;
-        gap: 6px;
-        margin-top: 10px;
+        gap: 3px;
+        margin-top: 8px;
       }
       .row {
         display: flex;
         align-items: baseline;
         justify-content: space-between;
         gap: 12px;
-        font-size: 0.82rem;
+        font-size: 0.8rem;
       }
       .row > span {
         color: var(--text-soft);
@@ -196,17 +198,11 @@ export class StatusSection extends LitElement {
     const light: LightStatus | undefined = status.lights[entityId];
     if (!light) {
       return html`<p class="muted sub">
-        This light isn't controlled by Sundial (add it in the integration's
-        options).
+        Not controlled by Sundial — add it in the integration's options.
       </p>`;
     }
     const now = new Date(status.now).getTime();
-    const modes = light.supported_color_modes.join(", ") || "not reported";
-    const capabilities = [
-      light.supports.brightness ? "brightness" : null,
-      light.supports.color_temp ? "color temp" : null,
-      light.supports.rgb ? "rgb" : null,
-    ].filter(Boolean);
+    const on = light.state === "on";
     return html`
       <div class="rows">
         ${this._row(
@@ -223,7 +219,6 @@ export class StatusSection extends LitElement {
                   ? MANUAL_REASONS[light.manual_reason]
                   : "unknown"
               )}
-              ${this._row("Manual since", relative(light.manual_since, now))}
               ${light.auto_reset_at
                 ? this._row(
                     "Back to automatic",
@@ -232,43 +227,31 @@ export class StatusSection extends LitElement {
                 : nothing}
             `
           : nothing}
-        ${this._row("Light is", light.state ?? "not found")}
-        ${this._row("Target now", values(light.target))}
-        ${this._row("Light reports", values(light.reported))}
-        ${this._row("Color mode", light.reported.color_mode ?? "—")}
-        ${this._row("Last applied", values(light.last_applied))}
+        ${this._row("Target", values(light.target))}
         ${this._row(
-          "Applied at",
-          light.last_applied_at
-            ? `${clockTime(light.last_applied_at)} · ${relative(light.last_applied_at, now)}`
+          "Reports",
+          on ? values(light.reported) : (light.state ?? "not found")
+        )}
+        ${this._row(
+          "Last run",
+          light.last_outcome
+            ? `${OUTCOMES[light.last_outcome]} · ${relative(light.last_evaluated_at, now)}`
             : "—"
         )}
-        ${this._row(
-          "Last checked",
-          light.last_evaluated_at ? relative(light.last_evaluated_at, now) : "—"
-        )}
-        ${this._row(
-          "Result",
-          light.last_outcome ? OUTCOMES[light.last_outcome] : "—"
-        )}
-        ${light.settling
-          ? this._row("Settling", "waiting for the light to finish fading")
+        ${this._row("Next run", relative(status.global.next_pass_at, now))}
+        ${light.group.kind === "group"
+          ? this._row(
+              "Group",
+              `${light.group.members} lights · ${light.group.members_on} on`
+            )
           : nothing}
-        ${this._row("Sundial can set", capabilities.join(", ") || "nothing")}
-        ${this._row("Light supports", modes)}
-        ${this._row(
-          "Allowed range",
-          `${light.config.min_brightness}–${light.config.max_brightness}% · ` +
-            `${light.config.min_color_temp}–${light.config.max_color_temp} K`
-        )}
-        ${this._row(
-          "Behaviour",
-          `${light.config.limit_mode} · render ${light.config.render_mode}` +
-            (light.config.separate_turn_on_commands ? " · split commands" : "")
-        )}
-        ${this._row("Last pass", relative(status.global.last_pass_at, now))}
-        ${this._row("Next pass", relative(status.global.next_pass_at, now))}
       </div>
+      ${light.group.kind === "group"
+        ? html`<p class="warn">
+            Light groups can misbehave. Adding the individual lights is
+            recommended.
+          </p>`
+        : nothing}
       ${light.manual_control
         ? html`<div class="actions">
             <button
@@ -288,12 +271,6 @@ export class StatusSection extends LitElement {
     const { sun } = status;
     const g = status.global;
     const now = new Date(status.now).getTime();
-    const hour = Math.floor(status.local_hour);
-    const minute = Math.floor((status.local_hour - hour) * 60);
-    const coords =
-      sun.latitude !== null && sun.longitude !== null
-        ? `${sun.latitude.toFixed(4)}, ${sun.longitude.toFixed(4)} (${sun.coordinates_source})`
-        : "not set";
     return html`
       <div class="rows">
         ${this._row(
@@ -302,43 +279,14 @@ export class StatusSection extends LitElement {
             >${g.enabled ? "Enabled" : "Disabled"}</span
           >`
         )}
-        ${this._row("Active schema", g.active_schema_name)}
         ${this._row(
-          "Reading the curve at",
-          `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} local`
+          "Sun",
+          `${sun.is_day ? "day" : "night"} · up ${clockTime(sun.nearest_sunrise)} · down ${clockTime(sun.nearest_sunset)}`
         )}
-        ${this._row("Sun", sun.is_day ? "day" : "night")}
-        ${this._row("Height in the sky", sun.position.toFixed(3))}
+        ${this._row("Sun now", values(sun.values))}
         ${this._row(
-          "Nearest sunrise",
-          `${clockTime(sun.nearest_sunrise)} · ${sun.sunrise_source}`
-        )}
-        ${this._row(
-          "Nearest sunset",
-          `${clockTime(sun.nearest_sunset)} · ${sun.sunset_source}`
-        )}
-        ${this._row("Coordinates", coords)}
-        ${this._row(
-          "Raw signal",
-          `brightness ${sun.drive.brightness.toFixed(3)} · warmth ${sun.drive.warmth.toFixed(3)}`
-        )}
-        ${this._row("Sun values now", values(sun.values))}
-        ${this._row(
-          "Last pass",
-          `${relative(g.last_pass_at, now)}${g.pass_running ? " · running" : ""}`
-        )}
-        ${this._row("Next pass", relative(g.next_pass_at, now))}
-        ${this._row(
-          "Runs",
-          `every ${formatDuration(g.interval)} · ${g.transition}s transition`
-        )}
-        ${this._row(
-          "Manual takeover",
-          g.take_over_control
-            ? g.autoreset_control > 0
-              ? `on · auto-reset after ${formatDuration(g.autoreset_control)}`
-              : "on · no auto-reset"
-            : "off"
+          "Next run",
+          `${relative(g.next_pass_at, now)}${g.pass_running ? " · running" : ""}`
         )}
         ${this._row(
           "Lights",

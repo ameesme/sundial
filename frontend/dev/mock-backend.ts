@@ -25,6 +25,9 @@ interface FakeLight {
   area_name: string | null;
   supports_rgb: boolean;
   ct_range: [number, number] | null;
+  // Mirrors the `group` block of sundial/status: an HA group we can read the
+  // members of, a group we can't (Zigbee), or an ordinary fixture.
+  group?: { members: number; members_on: number };
 }
 
 const FAKE_LIGHTS: FakeLight[] = [
@@ -36,6 +39,8 @@ const FAKE_LIGHTS: FakeLight[] = [
   { entity_id: "light.pantry", name: "Pantry Dimmer", area_name: "Kitchen", supports_rgb: false, ct_range: null },
   { entity_id: "light.bedroom", name: "Bedroom", area_name: "Bedroom", supports_rgb: true, ct_range: null },
   { entity_id: "light.hallway", name: "Hallway", area_name: null, supports_rgb: false, ct_range: [2700, 5000] },
+  // An HA group, partly on — writes get narrowed to the lit members.
+  { entity_id: "light.living_group", name: "Living Room Group", area_name: "Living Room", supports_rgb: false, ct_range: [2200, 4000], group: { members: 3, members_on: 1 } },
 ];
 
 const cell = (brightness: number, color_temp: number, rgb_color?: [number, number, number]): HourCell => ({
@@ -223,6 +228,9 @@ function statusPayload(store: Store): StatusPayload {
           ? "skipped_at_target"
           : "skipped_light_off",
       settling: false,
+      group: light.group
+        ? { kind: "group", members: light.group.members, members_on: light.group.members_on }
+        : { kind: "light", members: null, members_on: null },
       supports: {
         brightness: true,
         color_temp: light.ct_range !== null,
