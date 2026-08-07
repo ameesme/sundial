@@ -37,31 +37,26 @@ def lerp(a: float, b: float, t: float) -> float:
     return a + (b - a) * t
 
 
-def _round5(value: float) -> int:
+def round5(value: float) -> int:
     """Round Kelvin to the nearest 5 for stable, comparable values."""
     return int(round(value / 5.0) * 5)
 
 
-# The tanh curve-fitting helpers below (find_a_b, scaled_tanh) and
-# color_difference_redmean further down are derived from Adaptive Lighting
-# (https://github.com/basnijholt/adaptive-lighting), copyright Bas Nijholt and
-# contributors, licensed under the Apache License 2.0 — see
-# THIRD_PARTY_LICENSES at the repository root. Both have been modified.
-def find_a_b(x1: float, x2: float, y1: float, y2: float) -> tuple[float, float]:
-    """Solve a/b so ``0.5*(1+tanh(a*x+b))`` passes through the two points."""
-    ya = math.atanh(2.0 * y1 - 1.0)
-    yb = math.atanh(2.0 * y2 - 1.0)
-    a = (yb - ya) / (x2 - x1)
-    b = ya - a * x1
-    return a, b
+# The tanh curve below and color_difference_redmean further down are derived
+# from Adaptive Lighting (https://github.com/basnijholt/adaptive-lighting),
+# copyright Bas Nijholt and contributors, licensed under the Apache License
+# 2.0 — see THIRD_PARTY_LICENSES at the repository root. Both have been
+# modified.
+#
+# The curve is only ever fitted through (0, 0.05) and (1, 0.95), so its two
+# coefficients are constants rather than a solve per call.
+_TANH_A = 2.9444389791664403
+_TANH_B = -1.4722194895832204
 
 
-def scaled_tanh(
-    x: float, x1: float, x2: float, y1: float = 0.05, y2: float = 0.95
-) -> float:
-    """A smooth S-curve mapping ``x`` to ``0..1``."""
-    a, b = find_a_b(x1, x2, y1, y2)
-    return 0.5 * (1.0 + math.tanh(a * x + b))
+def scaled_tanh(x: float) -> float:
+    """A smooth S-curve mapping ``x`` in 0..1 to 0.05..0.95."""
+    return 0.5 * (1.0 + math.tanh(_TANH_A * x + _TANH_B))
 
 
 def color_difference_redmean(
@@ -176,7 +171,7 @@ def _ramp(now: datetime, start: datetime, end: datetime, rising: bool) -> float:
     """A smooth tanh 0..1 transition across the ``[start, end]`` window."""
     total = (end - start).total_seconds() or 1.0
     frac = clamp((now - start).total_seconds() / total, 0.0, 1.0)
-    value = scaled_tanh(frac, 0.0, 1.0)
+    value = scaled_tanh(frac)
     return value if rising else (1.0 - value)
 
 
@@ -240,7 +235,7 @@ def sun_values(
 
 def sun_row(sun_vals: list[tuple[float, float]]) -> list[tuple[int, int]]:
     """The sun's own (brightness, colorTemp) for each of the 24 hours."""
-    return [(int(round(bri)), _round5(temp)) for bri, temp in sun_vals]
+    return [(int(round(bri)), round5(temp)) for bri, temp in sun_vals]
 
 
 RgbColor = tuple[int, int, int]
@@ -340,7 +335,7 @@ def light_target(
     bri, temp, rgb = interpolate_cyclic(anchors, hour)
     return Target(
         brightness_pct=int(round(bri)),
-        color_temp_kelvin=_round5(temp),
+        color_temp_kelvin=round5(temp),
         rgb_color=rgb,
     )
 

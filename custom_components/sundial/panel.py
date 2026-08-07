@@ -8,6 +8,7 @@ coordinator so the running adaptation reflects changes immediately.
 from __future__ import annotations
 
 from datetime import datetime
+from functools import wraps
 import hashlib
 import os
 
@@ -18,7 +19,6 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
-    ATTR_SUPPORTED_COLOR_MODES,
 )
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -39,7 +39,7 @@ from .const import (
     PANEL_TITLE,
     PANEL_URL_PATH,
 )
-from .coordinator import SundialCoordinator, get_coordinator, local_hour
+from .coordinator import SundialCoordinator, get_coordinator
 from .engine import Target
 from .models import GlobalSettings, Schema, StoreData
 
@@ -208,11 +208,10 @@ def _group_status(
 ) -> dict:
     """Whether this entity is a light group, and how many members are lit.
 
-    Turning a group on lights every member, so adapting one that is only
-    partly on would switch on lights the user left off — :meth:`_write_targets`
-    narrows the write to the lit ones. Only groups that publish a member list
-    can be recognised (and narrowed); Zigbee groups look like ordinary lights
-    from here, so they are reported as such rather than guessed at.
+    Reported so the panel can warn that groups misbehave: turning one on lights
+    every member, so adapting a partly-on group switches on lights the user
+    left off. Only groups that publish a member list can be recognised; Zigbee
+    groups look like ordinary lights from here and are reported as such.
     """
     members = coordinator.group_members(entity_id)
     if members is None:
@@ -231,44 +230,20 @@ def _light_status(
 ) -> dict:
     state = hass.states.get(entity_id)
     rt = coordinator.runtime(entity_id)
-    brightness, color_temp, rgb = coordinator.supported_modes(entity_id)
-    cfg = coordinator.data.active_schema.light_config(entity_id)
-    attrs = state.attributes if state else {}
     return {
         "state": state.state if state else None,
         "manual_control": bool(rt and rt.manual_control),
         "manual_reason": rt.manual_reason if rt else None,
-        "manual_since": _iso(rt.manual_since if rt else None),
         "auto_reset_at": _iso(rt.auto_reset_at if rt else None),
         "target": _target_payload(coordinator.compute_target(entity_id, now)),
         "reported": _reported_payload(state),
-        "last_applied": _target_payload(rt.last_target if rt else None),
-        "last_applied_at": _iso(rt.last_applied_at if rt else None),
         "last_evaluated_at": _iso(rt.last_evaluated_at if rt else None),
         "last_outcome": rt.last_outcome if rt else None,
-        "settling": coordinator.is_settling(entity_id),
         "group": _group_status(hass, coordinator, entity_id),
-        "supports": {
-            "brightness": brightness,
-            "color_temp": color_temp,
-            "rgb": rgb,
-        },
-        "supported_color_modes": list(attrs.get(ATTR_SUPPORTED_COLOR_MODES) or []),
-        "config": {
-            "min_brightness": cfg.min_brightness,
-            "max_brightness": cfg.max_brightness,
-            "min_color_temp": cfg.min_color_temp,
-            "max_color_temp": cfg.max_color_temp,
-            "limit_mode": cfg.limit_mode,
-            "render_mode": cfg.render_mode,
-            "separate_turn_on_commands": cfg.separate_turn_on_commands,
-        },
     }
 
 
-def _sun_status(
-    hass: HomeAssistant, coordinator: SundialCoordinator, now: datetime
-) -> dict:
+def _sun_status(coordinator: SundialCoordinator, now: datetime) -> dict:
     sun = coordinator.data.active_schema.sun
     snap, drive = coordinator.sun_state(sun, now)
     sun_brightness, sun_color_temp = engine.drive_to_values(
@@ -278,26 +253,12 @@ def _sun_status(
         sun.min_color_temp,
         sun.max_color_temp,
     )
-    settings = coordinator.settings
-    custom_coords = (
-        settings.sun_latitude is not None and settings.sun_longitude is not None
-    )
     return {
-        "position": round(snap.position, 4),
         "is_day": snap.is_day,
         "nearest_sunrise": _iso(snap.nearest_sunrise),
         "nearest_sunset": _iso(snap.nearest_sunset),
-        "sunrise_source": "fixed" if sun.sunrise_time else "astral",
-        "sunset_source": "fixed" if sun.sunset_time else "astral",
-        "latitude": settings.sun_latitude if custom_coords else hass.config.latitude,
-        "longitude": settings.sun_longitude if custom_coords else hass.config.longitude,
-        "coordinates_source": "settings" if custom_coords else "home",
-        "drive": {
-            "brightness": round(drive.brightness, 4),
-            "warmth": round(drive.warmth, 4),
-        },
         "values": _values_payload(
-            int(round(sun_brightness)), int(round(sun_color_temp / 5) * 5)
+            int(round(sun_brightness)), engine.round5(sun_color_temp)
         ),
     }
 
@@ -306,26 +267,16 @@ def _status_payload(hass: HomeAssistant, coordinator: SundialCoordinator) -> dic
     """A live snapshot of what the integration is doing, for the panel's
     per-item Status section. Read-only and never persisted."""
     now = dt_util.utcnow()
-    schema = coordinator.data.active_schema
     lights = {
         entity_id: _light_status(hass, coordinator, entity_id, now)
         for entity_id in coordinator.controlled_lights
     }
     return {
         "now": now.isoformat(),
-        "local_hour": round(local_hour(now), 4),
-        "sun": _sun_status(hass, coordinator, now),
+        "sun": _sun_status(coordinator, now),
         "lights": lights,
         "global": {
             "enabled": coordinator.enabled,
-            "active_schema_id": schema.id,
-            "active_schema_name": schema.name,
-            "interval": coordinator.settings.interval,
-            "transition": coordinator.settings.transition,
-            "initial_transition": coordinator.settings.initial_transition,
-            "take_over_control": coordinator.settings.take_over_control,
-            "autoreset_control": coordinator.settings.autoreset_control,
-            "last_pass_at": _iso(coordinator.last_pass_at),
             "next_pass_at": _iso(coordinator.next_pass_at),
             "pass_running": coordinator.pass_running,
             "light_count": len(lights),
@@ -339,12 +290,18 @@ def _status_payload(hass: HomeAssistant, coordinator: SundialCoordinator) -> dic
     }
 
 
-def _error_if_not_ready(connection, msg) -> SundialCoordinator | None:
-    coordinator = get_coordinator(connection.hass)
-    if coordinator is None:
-        connection.send_error(msg["id"], "not_ready", "Integration not set up")
-        return None
-    return coordinator
+def _with_coordinator(handler):
+    """Pass the coordinator to ``handler``, or answer "not ready" without it."""
+
+    @wraps(handler)
+    async def wrapper(hass, connection, msg) -> None:
+        coordinator = get_coordinator(hass)
+        if coordinator is None:
+            connection.send_error(msg["id"], "not_ready", "Integration not set up")
+            return
+        await handler(hass, connection, msg, coordinator)
+
+    return wrapper
 
 
 # --- WebSocket commands ------------------------------------------------------
@@ -370,10 +327,9 @@ def _register_ws_commands(hass: HomeAssistant) -> None:
 
 @websocket_api.websocket_command({vol.Required("type"): "sundial/get_config"})
 @websocket_api.async_response
-async def ws_get_config(hass, connection, msg) -> None:
-    coordinator = _error_if_not_ready(connection, msg)
-    if coordinator is not None:
-        connection.send_result(msg["id"], _config_payload(hass, coordinator))
+@_with_coordinator
+async def ws_get_config(hass, connection, msg, coordinator) -> None:
+    connection.send_result(msg["id"], _config_payload(hass, coordinator))
 
 
 @websocket_api.websocket_command(
@@ -383,10 +339,8 @@ async def ws_get_config(hass, connection, msg) -> None:
     }
 )
 @websocket_api.async_response
-async def ws_update_settings(hass, connection, msg) -> None:
-    coordinator = _error_if_not_ready(connection, msg)
-    if coordinator is None:
-        return
+@_with_coordinator
+async def ws_update_settings(hass, connection, msg, coordinator) -> None:
     merged = coordinator.data.settings.to_dict()
     merged.update(msg["settings"])
     coordinator.data.settings = GlobalSettings.from_dict(merged)
@@ -401,10 +355,8 @@ async def ws_update_settings(hass, connection, msg) -> None:
     }
 )
 @websocket_api.async_response
-async def ws_save_schema(hass, connection, msg) -> None:
-    coordinator = _error_if_not_ready(connection, msg)
-    if coordinator is None:
-        return
+@_with_coordinator
+async def ws_save_schema(hass, connection, msg, coordinator) -> None:
     if not msg["schema"].get("id"):
         connection.send_error(msg["id"], "invalid_schema", "Schema id is required")
         return
@@ -421,10 +373,8 @@ async def ws_save_schema(hass, connection, msg) -> None:
     }
 )
 @websocket_api.async_response
-async def ws_delete_schema(hass, connection, msg) -> None:
-    coordinator = _error_if_not_ready(connection, msg)
-    if coordinator is None:
-        return
+@_with_coordinator
+async def ws_delete_schema(hass, connection, msg, coordinator) -> None:
     schema_id = msg["schema_id"]
     if schema_id == DEFAULT_SCHEMA_ID:
         connection.send_error(
@@ -445,10 +395,8 @@ async def ws_delete_schema(hass, connection, msg) -> None:
     }
 )
 @websocket_api.async_response
-async def ws_set_active_schema(hass, connection, msg) -> None:
-    coordinator = _error_if_not_ready(connection, msg)
-    if coordinator is None:
-        return
+@_with_coordinator
+async def ws_set_active_schema(hass, connection, msg, coordinator) -> None:
     coordinator.set_active_schema(msg["schema_id"])
     await coordinator.async_apply_config_change()
     connection.send_result(msg["id"], _config_payload(hass, coordinator))
@@ -469,10 +417,8 @@ def _resolve_schema(coordinator: SundialCoordinator, msg) -> Schema | None:
     }
 )
 @websocket_api.async_response
-async def ws_timeline(hass, connection, msg) -> None:
-    coordinator = _error_if_not_ready(connection, msg)
-    if coordinator is None:
-        return
+@_with_coordinator
+async def ws_timeline(hass, connection, msg, coordinator) -> None:
     schema = _resolve_schema(coordinator, msg)
     if schema is None:
         connection.send_error(msg["id"], "not_found", "Unknown schema")
@@ -490,10 +436,8 @@ async def ws_timeline(hass, connection, msg) -> None:
     }
 )
 @websocket_api.async_response
-async def ws_preview(hass, connection, msg) -> None:
-    coordinator = _error_if_not_ready(connection, msg)
-    if coordinator is None:
-        return
+@_with_coordinator
+async def ws_preview(hass, connection, msg, coordinator) -> None:
     schema = _resolve_schema(coordinator, msg) or coordinator.data.active_schema
     targets = await coordinator.async_preview(schema, msg["hour"], msg["apply"])
     connection.send_result(msg["id"], {"targets": targets})
@@ -506,10 +450,8 @@ async def ws_preview(hass, connection, msg) -> None:
     }
 )
 @websocket_api.async_response
-async def ws_apply(hass, connection, msg) -> None:
-    coordinator = _error_if_not_ready(connection, msg)
-    if coordinator is None:
-        return
+@_with_coordinator
+async def ws_apply(hass, connection, msg, coordinator) -> None:
     raw = msg.get("entity_id")
     entity_ids = [raw] if isinstance(raw, str) else raw
     await coordinator.async_apply(entity_ids)
@@ -518,11 +460,10 @@ async def ws_apply(hass, connection, msg) -> None:
 
 @websocket_api.websocket_command({vol.Required("type"): "sundial/export"})
 @websocket_api.async_response
-async def ws_export(hass, connection, msg) -> None:
+@_with_coordinator
+async def ws_export(hass, connection, msg, coordinator) -> None:
     """The raw store document, used by the panel's backup download."""
-    coordinator = _error_if_not_ready(connection, msg)
-    if coordinator is not None:
-        connection.send_result(msg["id"], coordinator.data.to_dict())
+    connection.send_result(msg["id"], coordinator.data.to_dict())
 
 
 @websocket_api.websocket_command(
@@ -532,16 +473,14 @@ async def ws_export(hass, connection, msg) -> None:
     }
 )
 @websocket_api.async_response
-async def ws_import(hass, connection, msg) -> None:
+@_with_coordinator
+async def ws_import(hass, connection, msg, coordinator) -> None:
     """Restore a previously exported configuration.
 
     ``StoreData.from_dict`` normalises everything (unknown keys are dropped,
     hour cells coerced, a default schema guaranteed), so a malformed file
     degrades to defaults rather than corrupting the store.
     """
-    coordinator = _error_if_not_ready(connection, msg)
-    if coordinator is None:
-        return
     coordinator.store.data = StoreData.from_dict(msg["data"])
     await coordinator.async_apply_config_change()
     connection.send_result(msg["id"], _config_payload(hass, coordinator))
@@ -549,11 +488,10 @@ async def ws_import(hass, connection, msg) -> None:
 
 @websocket_api.websocket_command({vol.Required("type"): "sundial/status"})
 @websocket_api.async_response
-async def ws_status(hass, connection, msg) -> None:
+@_with_coordinator
+async def ws_status(hass, connection, msg, coordinator) -> None:
     """Live diagnostics for the panel's Status section (polled while open)."""
-    coordinator = _error_if_not_ready(connection, msg)
-    if coordinator is not None:
-        connection.send_result(msg["id"], _status_payload(hass, coordinator))
+    connection.send_result(msg["id"], _status_payload(hass, coordinator))
 
 
 @websocket_api.websocket_command(
@@ -564,14 +502,12 @@ async def ws_status(hass, connection, msg) -> None:
     }
 )
 @websocket_api.async_response
-async def ws_set_manual_control(hass, connection, msg) -> None:
+@_with_coordinator
+async def ws_set_manual_control(hass, connection, msg, coordinator) -> None:
     """Hand a light back to the schedule (or take it away) from the panel.
 
     Returns the refreshed status so the section updates immediately instead of
     waiting for the next poll.
     """
-    coordinator = _error_if_not_ready(connection, msg)
-    if coordinator is None:
-        return
     coordinator.set_manual_control(msg["entity_id"], msg["manual"])
     connection.send_result(msg["id"], _status_payload(hass, coordinator))

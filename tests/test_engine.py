@@ -46,9 +46,9 @@ def test_clamp_and_lerp():
 
 
 def test_scaled_tanh_is_monotonic_and_centered():
-    assert engine.scaled_tanh(0.5, 0.0, 1.0) == pytest.approx(0.5, abs=1e-9)
-    lo = engine.scaled_tanh(0.0, 0.0, 1.0)
-    hi = engine.scaled_tanh(1.0, 0.0, 1.0)
+    assert engine.scaled_tanh(0.5) == pytest.approx(0.5, abs=1e-9)
+    lo = engine.scaled_tanh(0.0)
+    hi = engine.scaled_tanh(1.0)
     assert lo == pytest.approx(0.05, abs=1e-9)
     assert hi == pytest.approx(0.95, abs=1e-9)
 

@@ -117,16 +117,7 @@ export class SundialPanel extends LitElement {
     }
     if (!this._loaded) {
       this._loaded = true;
-      void this._load();
-    }
-  }
-
-  private async _load(): Promise<void> {
-    try {
-      this._config = await this._api!.getConfig();
-      this._error = undefined;
-    } catch (err) {
-      this._error = String(err);
+      void this._run(this._api!.getConfig());
     }
   }
 

@@ -1,7 +1,12 @@
 // In-memory fake of the integration's WebSocket backend, so the panel can run
 // fully in the browser (npm run dev) with no Home Assistant. It mirrors the WS
-// commands in custom_components/sundial/panel.py and computes timeline/preview
-// with the ported engine in ./engine.ts.
+// commands in custom_components/sundial/panel.py.
+//
+// The lighting math is NOT ported here — the timeline is a fixture captured
+// from the real engine.py, with explicit hour cells laid over it. Edits to the
+// sun config therefore don't move the curve in the harness; everything else
+// (cells, overrides, RGB, selection, drawers, status) works as it does in
+// production.
 
 import type {
   ConfigPayload,
@@ -15,7 +20,6 @@ import type {
   StatusPayload,
 } from "../src/types";
 import { currentHour, defaultLightConfig, defaultSunConfig } from "../src/utils";
-import { computeSunState, computeTargets, computeTimeline } from "./engine";
 
 // --- fake devices ------------------------------------------------------------
 
@@ -26,7 +30,7 @@ interface FakeLight {
   supports_rgb: boolean;
   ct_range: [number, number] | null;
   // Mirrors the `group` block of sundial/status: an HA group we can read the
-  // members of, a group we can't (Zigbee), or an ordinary fixture.
+  // members of, or (unset) a Zigbee group / ordinary fixture we can't.
   group?: { members: number; members_on: number };
 }
 
@@ -39,9 +43,81 @@ const FAKE_LIGHTS: FakeLight[] = [
   { entity_id: "light.pantry", name: "Pantry Dimmer", area_name: "Kitchen", supports_rgb: false, ct_range: null },
   { entity_id: "light.bedroom", name: "Bedroom", area_name: "Bedroom", supports_rgb: true, ct_range: null },
   { entity_id: "light.hallway", name: "Hallway", area_name: null, supports_rgb: false, ct_range: [2700, 5000] },
-  // An HA group, partly on — writes get narrowed to the lit members.
+  // An HA group, partly on — the panel warns about those.
   { entity_id: "light.living_group", name: "Living Room Group", area_name: "Living Room", supports_rgb: false, ct_range: [2200, 4000], group: { members: 3, members_on: 1 } },
 ];
+
+// The sun's 24 hourly values under the default sun config, captured from
+// engine.py (sunrise 07:00, sunset 19:00, default offsets). Regenerate if the
+// defaults change; nothing here recomputes it.
+const SUN_ROW: { brightness: number; color_temp: number }[] = [
+  { brightness: 5, color_temp: 2000 },
+  { brightness: 5, color_temp: 2000 },
+  { brightness: 5, color_temp: 2000 },
+  { brightness: 5, color_temp: 2000 },
+  { brightness: 5, color_temp: 2000 },
+  { brightness: 5, color_temp: 2000 },
+  { brightness: 5, color_temp: 2000 },
+  { brightness: 10, color_temp: 2000 },
+  { brightness: 23, color_temp: 2000 },
+  { brightness: 54, color_temp: 2725 },
+  { brightness: 84, color_temp: 3825 },
+  { brightness: 100, color_temp: 4720 },
+  { brightness: 100, color_temp: 5300 },
+  { brightness: 100, color_temp: 5500 },
+  { brightness: 100, color_temp: 5300 },
+  { brightness: 100, color_temp: 4720 },
+  { brightness: 84, color_temp: 3825 },
+  { brightness: 54, color_temp: 2725 },
+  { brightness: 23, color_temp: 2000 },
+  { brightness: 10, color_temp: 2000 },
+  { brightness: 5, color_temp: 2000 },
+  { brightness: 5, color_temp: 2000 },
+  { brightness: 5, color_temp: 2000 },
+  { brightness: 5, color_temp: 2000 },
+];
+
+// Sunrise/sunset behind that fixture, in fractional local hours.
+const SUNRISE_HOUR = 7 + 5000 / 3600;
+const SUNSET_HOUR = 19 - 5000 / 3600;
+
+// One light's row: the sun's, with the light's explicit cells laid over it.
+function lightRow(cfg: LightConfig) {
+  return SUN_ROW.map((sunCell, hour) => {
+    const cell = cfg.hours[hour];
+    return {
+      brightness: cell ? cell.brightness : sunCell.brightness,
+      color_temp: cell ? cell.color_temp : sunCell.color_temp,
+      rgb_color: cell?.rgb_color ?? null,
+      explicit: cell != null,
+    };
+  });
+}
+
+const rowFor = (schema: Schema, entityId: string) =>
+  lightRow(schema.lights[entityId] ?? defaultLightConfig());
+
+function timelinePayload(schema: Schema) {
+  const lights: Record<string, ReturnType<typeof lightRow>> = {};
+  for (const entityId of entityIds()) lights[entityId] = rowFor(schema, entityId);
+  return { sun: SUN_ROW, lights };
+}
+
+function targetsPayload(schema: Schema, hour: number) {
+  const h = Math.floor(((hour % 24) + 24) % 24);
+  const targets: Record<
+    string,
+    { brightness_pct: number; color_temp_kelvin: number }
+  > = {};
+  for (const entityId of entityIds()) {
+    const cell = rowFor(schema, entityId)[h];
+    targets[entityId] = {
+      brightness_pct: cell.brightness,
+      color_temp_kelvin: cell.color_temp,
+    };
+  }
+  return targets;
+}
 
 const cell = (brightness: number, color_temp: number, rgb_color?: [number, number, number]): HourCell => ({
   brightness,
@@ -185,8 +261,7 @@ function statusPayload(store: Store): StatusPayload {
   const now = Date.now();
   const hour = currentHour();
   const schema = store.schemas[store.active_schema_id];
-  const sun = computeSunState(schema.sun, hour);
-  const targets = computeTargets(schema, hour, entityIds(), defaultLightConfig);
+  const targets = targetsPayload(schema, hour);
   // Fake a pass on the settings interval, counted from harness start.
   const period = store.settings.interval * 1000;
   const elapsed = now - store.started_at;
@@ -195,7 +270,6 @@ function statusPayload(store: Store): StatusPayload {
   const lights: Record<string, LightStatus> = {};
   for (const light of FAKE_LIGHTS) {
     const rt = store.runtime[light.entity_id];
-    const cfg = schema.lights[light.entity_id] ?? defaultLightConfig();
     const target = targets[light.entity_id];
     const on = rt.state === "on";
     // A manual light reports something other than what we asked for — that's
@@ -207,7 +281,6 @@ function statusPayload(store: Store): StatusPayload {
       state: rt.state,
       manual_control: rt.manual_control,
       manual_reason: rt.manual_reason,
-      manual_since: rt.manual_since,
       auto_reset_at:
         rt.manual_control && store.settings.autoreset_control > 0
           ? iso(now + store.settings.autoreset_control * 1000)
@@ -219,72 +292,34 @@ function statusPayload(store: Store): StatusPayload {
         rgb_color: null,
         color_mode: on ? (light.supports_rgb ? "rgb" : "color_temp") : null,
       },
-      last_applied: rt.manual_control ? null : { ...target, rgb_color: null },
-      last_applied_at: rt.manual_control || !on ? null : iso(lastPass),
       last_evaluated_at: iso(lastPass),
       last_outcome: rt.manual_control
         ? "skipped_manual"
         : on
           ? "skipped_at_target"
           : "skipped_light_off",
-      settling: false,
       group: light.group
         ? { kind: "group", members: light.group.members, members_on: light.group.members_on }
         : { kind: "light", members: null, members_on: null },
-      supports: {
-        brightness: true,
-        color_temp: light.ct_range !== null,
-        rgb: light.supports_rgb,
-      },
-      supported_color_modes: [
-        ...(light.ct_range ? ["color_temp"] : []),
-        ...(light.supports_rgb ? ["rgb"] : []),
-      ],
-      config: {
-        min_brightness: cfg.min_brightness,
-        max_brightness: cfg.max_brightness,
-        min_color_temp: cfg.min_color_temp,
-        max_color_temp: cfg.max_color_temp,
-        limit_mode: cfg.limit_mode,
-        render_mode: cfg.render_mode,
-        separate_turn_on_commands: cfg.separate_turn_on_commands,
-      },
     };
   }
 
-  const custom =
-    store.settings.sun_latitude !== null && store.settings.sun_longitude !== null;
+  const sunNow = SUN_ROW[Math.floor(hour) % 24];
   return {
     now: iso(now),
-    local_hour: hour,
     sun: {
-      position: sun.snap.position,
-      is_day: sun.snap.isDay,
-      nearest_sunrise: hourToIso(sun.snap.nearestSunrise),
-      nearest_sunset: hourToIso(sun.snap.nearestSunset),
-      sunrise_source: schema.sun.sunrise_time ? "fixed" : "astral",
-      sunset_source: schema.sun.sunset_time ? "fixed" : "astral",
-      latitude: custom ? store.settings.sun_latitude : 52.3731,
-      longitude: custom ? store.settings.sun_longitude : 4.8922,
-      coordinates_source: custom ? "settings" : "home",
-      drive: sun.drive,
+      is_day: hour >= SUNRISE_HOUR && hour <= SUNSET_HOUR,
+      nearest_sunrise: hourToIso(SUNRISE_HOUR),
+      nearest_sunset: hourToIso(SUNSET_HOUR),
       values: {
-        brightness_pct: sun.brightness,
-        color_temp_kelvin: sun.colorTemp,
+        brightness_pct: sunNow.brightness,
+        color_temp_kelvin: sunNow.color_temp,
         rgb_color: null,
       },
     },
     lights,
     global: {
       enabled: true,
-      active_schema_id: schema.id,
-      active_schema_name: schema.name,
-      interval: store.settings.interval,
-      transition: store.settings.transition,
-      initial_transition: store.settings.initial_transition,
-      take_over_control: store.settings.take_over_control,
-      autoreset_control: store.settings.autoreset_control,
-      last_pass_at: iso(lastPass),
       next_pass_at: iso(lastPass + period),
       pass_running: false,
       light_count: FAKE_LIGHTS.length,
@@ -324,17 +359,10 @@ function handle(store: Store, msg: Msg): unknown {
       return configPayload(store);
 
     case "sundial/timeline":
-      return computeTimeline(msg.schema as Schema, entityIds(), defaultLightConfig);
+      return timelinePayload(msg.schema as Schema);
 
     case "sundial/preview":
-      return {
-        targets: computeTargets(
-          msg.schema as Schema,
-          msg.hour as number,
-          entityIds(),
-          defaultLightConfig,
-        ),
-      };
+      return { targets: targetsPayload(msg.schema as Schema, msg.hour as number) };
 
     case "sundial/apply":
       return configPayload(store);

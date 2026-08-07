@@ -116,9 +116,6 @@ export class SchemaEditor extends LitElement {
         opacity: 0;
         cursor: pointer;
       }
-      .grow {
-        flex: 1;
-      }
       input[type="color"] {
         width: 52px;
         height: 34px;
@@ -591,7 +588,7 @@ export class SchemaEditor extends LitElement {
   /** The bulb's supported colour-temperature range, normalised to the
    *  editor's 50 K slider grid and bounds; null when unknown/RGB-only. */
   private _bulbCtRange(entityId: string): [number, number] | null {
-    const light = this.config.lights.find((l) => l.entity_id === entityId);
+    const light = this._lightInfo(entityId);
     if (
       light?.min_color_temp_kelvin == null ||
       light?.max_color_temp_kelvin == null
@@ -895,10 +892,7 @@ export class SchemaEditor extends LitElement {
           ? sel.ref.entityId
           : null;
     if (!entityId) return null;
-    return (
-      this.config.lights.find((l) => l.entity_id === entityId)?.area_name ??
-      null
-    );
+    return this._lightInfo(entityId)?.area_name ?? null;
   }
 
   private _renderContextBody(): TemplateResult {
@@ -944,7 +938,7 @@ export class SchemaEditor extends LitElement {
   }
 
   private _renderCellEditor(ref: CellRef): TemplateResult {
-    const light = this.config.lights.find((l) => l.entity_id === ref.entityId);
+    const light = this._lightInfo(ref.entityId);
     const explicit = this._lightCfg(ref.entityId).hours[ref.hour];
     const effective = this._timeline?.lights[ref.entityId]?.[ref.hour];
     const brightness = explicit?.brightness ?? effective?.brightness ?? 50;
@@ -1057,7 +1051,7 @@ export class SchemaEditor extends LitElement {
     entityId: string,
     cfg: LightConfig
   ): TemplateResult | typeof nothing {
-    const light = this.config.lights.find((l) => l.entity_id === entityId);
+    const light = this._lightInfo(entityId);
     if (!light?.supports_rgb || light.min_color_temp_kelvin == null) {
       return nothing;
     }

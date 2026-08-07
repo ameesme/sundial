@@ -133,59 +133,29 @@ export interface LightStatus {
   state: string | null;
   manual_control: boolean;
   manual_reason: ManualReason | null;
-  manual_since: string | null;
   auto_reset_at: string | null;
   target: StatusValues | null;
   reported: ReportedValues;
-  last_applied: StatusValues | null;
-  last_applied_at: string | null;
   last_evaluated_at: string | null;
   last_outcome: LightOutcome | null;
-  settling: boolean;
-  // "group": a group whose members we can read, and narrow writes to. A
-  // Zigbee group publishes no member list, so it arrives as "light".
+  // "group": a group whose members we can read. A Zigbee group publishes no
+  // member list, so it arrives as "light".
   group: {
     kind: "group" | "light";
     members: number | null;
     members_on: number | null;
   };
-  supports: { brightness: boolean; color_temp: boolean; rgb: boolean };
-  supported_color_modes: string[];
-  config: {
-    min_brightness: number;
-    max_brightness: number;
-    min_color_temp: number;
-    max_color_temp: number;
-    limit_mode: string;
-    render_mode: string;
-    separate_turn_on_commands: boolean;
-  };
 }
 
 export interface SunStatus {
-  position: number; // -1 solar midnight .. 1 solar noon
   is_day: boolean;
   nearest_sunrise: string | null;
   nearest_sunset: string | null;
-  sunrise_source: "astral" | "fixed";
-  sunset_source: "astral" | "fixed";
-  latitude: number | null;
-  longitude: number | null;
-  coordinates_source: "settings" | "home";
-  drive: { brightness: number; warmth: number };
   values: StatusValues;
 }
 
 export interface GlobalStatus {
   enabled: boolean;
-  active_schema_id: string;
-  active_schema_name: string;
-  interval: number;
-  transition: number;
-  initial_transition: number;
-  take_over_control: boolean;
-  autoreset_control: number;
-  last_pass_at: string | null;
   next_pass_at: string | null;
   pass_running: boolean;
   light_count: number;
@@ -195,7 +165,6 @@ export interface GlobalStatus {
 
 export interface StatusPayload {
   now: string;
-  local_hour: number;
   sun: SunStatus;
   lights: Record<string, LightStatus>;
   global: GlobalStatus;
