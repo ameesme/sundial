@@ -3,16 +3,16 @@
  * Copyright 2019 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const tt = globalThis, mt = tt.ShadowRoot && (tt.ShadyCSS === void 0 || tt.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, ft = Symbol(), xt = /* @__PURE__ */ new WeakMap();
-let Ft = class {
+const tt = globalThis, gt = tt.ShadowRoot && (tt.ShadyCSS === void 0 || tt.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, mt = Symbol(), xt = /* @__PURE__ */ new WeakMap();
+let qt = class {
   constructor(t, i, s) {
-    if (this._$cssResult$ = !0, s !== ft) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
+    if (this._$cssResult$ = !0, s !== mt) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
     this.cssText = t, this.t = i;
   }
   get styleSheet() {
     let t = this.o;
     const i = this.t;
-    if (mt && t === void 0) {
+    if (gt && t === void 0) {
       const s = i !== void 0 && i.length === 1;
       s && (t = xt.get(i)), t === void 0 && ((this.o = t = new CSSStyleSheet()).replaceSync(this.cssText), s && xt.set(i, t));
     }
@@ -22,33 +22,33 @@ let Ft = class {
     return this.cssText;
   }
 };
-const te = (e) => new Ft(typeof e == "string" ? e : e + "", void 0, ft), M = (e, ...t) => {
+const ie = (e) => new qt(typeof e == "string" ? e : e + "", void 0, mt), A = (e, ...t) => {
   const i = e.length === 1 ? e[0] : t.reduce((s, n, r) => s + ((o) => {
     if (o._$cssResult$ === !0) return o.cssText;
     if (typeof o == "number") return o;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + o + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
   })(n) + e[r + 1], e[0]);
-  return new Ft(i, e, ft);
-}, ee = (e, t) => {
-  if (mt) e.adoptedStyleSheets = t.map((i) => i instanceof CSSStyleSheet ? i : i.styleSheet);
+  return new qt(i, e, mt);
+}, se = (e, t) => {
+  if (gt) e.adoptedStyleSheets = t.map((i) => i instanceof CSSStyleSheet ? i : i.styleSheet);
   else for (const i of t) {
     const s = document.createElement("style"), n = tt.litNonce;
     n !== void 0 && s.setAttribute("nonce", n), s.textContent = i.cssText, e.appendChild(s);
   }
-}, yt = mt ? (e) => e : (e) => e instanceof CSSStyleSheet ? ((t) => {
+}, yt = gt ? (e) => e : (e) => e instanceof CSSStyleSheet ? ((t) => {
   let i = "";
   for (const s of t.cssRules) i += s.cssText;
-  return te(i);
+  return ie(i);
 })(e) : e;
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: ie, defineProperty: se, getOwnPropertyDescriptor: ne, getOwnPropertyNames: re, getOwnPropertySymbols: oe, getPrototypeOf: ae } = Object, ot = globalThis, kt = ot.trustedTypes, le = kt ? kt.emptyScript : "", ce = ot.reactiveElementPolyfillSupport, F = (e, t) => e, it = { toAttribute(e, t) {
+const { is: ne, defineProperty: re, getOwnPropertyDescriptor: oe, getOwnPropertyNames: ae, getOwnPropertySymbols: le, getPrototypeOf: ce } = Object, ot = globalThis, At = ot.trustedTypes, de = At ? At.emptyScript : "", he = ot.reactiveElementPolyfillSupport, q = (e, t) => e, it = { toAttribute(e, t) {
   switch (t) {
     case Boolean:
-      e = e ? le : null;
+      e = e ? de : null;
       break;
     case Object:
     case Array:
@@ -73,7 +73,7 @@ const { is: ie, defineProperty: se, getOwnPropertyDescriptor: ne, getOwnProperty
       }
   }
   return i;
-} }, _t = (e, t) => !ie(e, t), At = { attribute: !0, type: String, converter: it, reflect: !1, useDefault: !1, hasChanged: _t };
+} }, ft = (e, t) => !ne(e, t), kt = { attribute: !0, type: String, converter: it, reflect: !1, useDefault: !1, hasChanged: ft };
 Symbol.metadata ??= Symbol("metadata"), ot.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
 let I = class extends HTMLElement {
   static addInitializer(t) {
@@ -82,35 +82,35 @@ let I = class extends HTMLElement {
   static get observedAttributes() {
     return this.finalize(), this._$Eh && [...this._$Eh.keys()];
   }
-  static createProperty(t, i = At) {
+  static createProperty(t, i = kt) {
     if (i.state && (i.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(t) && ((i = Object.create(i)).wrapped = !0), this.elementProperties.set(t, i), !i.noAccessor) {
       const s = Symbol(), n = this.getPropertyDescriptor(t, s, i);
-      n !== void 0 && se(this.prototype, t, n);
+      n !== void 0 && re(this.prototype, t, n);
     }
   }
   static getPropertyDescriptor(t, i, s) {
-    const { get: n, set: r } = ne(this.prototype, t) ?? { get() {
+    const { get: n, set: r } = oe(this.prototype, t) ?? { get() {
       return this[i];
     }, set(o) {
       this[i] = o;
     } };
     return { get: n, set(o) {
-      const c = n?.call(this);
-      r?.call(this, o), this.requestUpdate(t, c, s);
+      const d = n?.call(this);
+      r?.call(this, o), this.requestUpdate(t, d, s);
     }, configurable: !0, enumerable: !0 };
   }
   static getPropertyOptions(t) {
-    return this.elementProperties.get(t) ?? At;
+    return this.elementProperties.get(t) ?? kt;
   }
   static _$Ei() {
-    if (this.hasOwnProperty(F("elementProperties"))) return;
-    const t = ae(this);
+    if (this.hasOwnProperty(q("elementProperties"))) return;
+    const t = ce(this);
     t.finalize(), t.l !== void 0 && (this.l = [...t.l]), this.elementProperties = new Map(t.elementProperties);
   }
   static finalize() {
-    if (this.hasOwnProperty(F("finalized"))) return;
-    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(F("properties"))) {
-      const i = this.properties, s = [...re(i), ...oe(i)];
+    if (this.hasOwnProperty(q("finalized"))) return;
+    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(q("properties"))) {
+      const i = this.properties, s = [...ae(i), ...le(i)];
       for (const n of s) this.createProperty(n, i[n]);
     }
     const t = this[Symbol.metadata];
@@ -156,7 +156,7 @@ let I = class extends HTMLElement {
   }
   createRenderRoot() {
     const t = this.shadowRoot ?? this.attachShadow(this.constructor.shadowRootOptions);
-    return ee(t, this.constructor.elementStyles), t;
+    return se(t, this.constructor.elementStyles), t;
   }
   connectedCallback() {
     this.renderRoot ??= this.createRenderRoot(), this.enableUpdating(!0), this._$EO?.forEach((t) => t.hostConnected?.());
@@ -181,14 +181,14 @@ let I = class extends HTMLElement {
     if (n !== void 0 && this._$Em !== n) {
       const r = s.getPropertyOptions(n), o = typeof r.converter == "function" ? { fromAttribute: r.converter } : r.converter?.fromAttribute !== void 0 ? r.converter : it;
       this._$Em = n;
-      const c = o.fromAttribute(i, r.type);
-      this[n] = c ?? this._$Ej?.get(n) ?? c, this._$Em = null;
+      const d = o.fromAttribute(i, r.type);
+      this[n] = d ?? this._$Ej?.get(n) ?? d, this._$Em = null;
     }
   }
   requestUpdate(t, i, s, n = !1, r) {
     if (t !== void 0) {
       const o = this.constructor;
-      if (n === !1 && (r = this[t]), s ??= o.getPropertyOptions(t), !((s.hasChanged ?? _t)(r, i) || s.useDefault && s.reflect && r === this._$Ej?.get(t) && !this.hasAttribute(o._$Eu(t, s)))) return;
+      if (n === !1 && (r = this[t]), s ??= o.getPropertyOptions(t), !((s.hasChanged ?? ft)(r, i) || s.useDefault && s.reflect && r === this._$Ej?.get(t) && !this.hasAttribute(o._$Eu(t, s)))) return;
       this.C(t, i, s);
     }
     this.isUpdatePending === !1 && (this._$ES = this._$EP());
@@ -218,8 +218,8 @@ let I = class extends HTMLElement {
       }
       const s = this.constructor.elementProperties;
       if (s.size > 0) for (const [n, r] of s) {
-        const { wrapped: o } = r, c = this[n];
-        o !== !0 || this._$AL.has(n) || c === void 0 || this.C(n, void 0, r, c);
+        const { wrapped: o } = r, d = this[n];
+        o !== !0 || this._$AL.has(n) || d === void 0 || this.C(n, void 0, r, d);
       }
     }
     let t = !1;
@@ -256,28 +256,28 @@ let I = class extends HTMLElement {
   firstUpdated(t) {
   }
 };
-I.elementStyles = [], I.shadowRootOptions = { mode: "open" }, I[F("elementProperties")] = /* @__PURE__ */ new Map(), I[F("finalized")] = /* @__PURE__ */ new Map(), ce?.({ ReactiveElement: I }), (ot.reactiveElementVersions ??= []).push("2.1.2");
+I.elementStyles = [], I.shadowRootOptions = { mode: "open" }, I[q("elementProperties")] = /* @__PURE__ */ new Map(), I[q("finalized")] = /* @__PURE__ */ new Map(), he?.({ ReactiveElement: I }), (ot.reactiveElementVersions ??= []).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const bt = globalThis, St = (e) => e, st = bt.trustedTypes, Ct = st ? st.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, qt = "$lit$", S = `lit$${Math.random().toFixed(9).slice(2)}$`, Kt = "?" + S, de = `<${Kt}>`, O = document, K = () => O.createComment(""), Z = (e) => e === null || typeof e != "object" && typeof e != "function", vt = Array.isArray, he = (e) => vt(e) || typeof e?.[Symbol.iterator] == "function", dt = `[ 	
-\f\r]`, B = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Mt = /-->/g, Et = />/g, E = RegExp(`>|${dt}(?:([^\\s"'>=/]+)(${dt}*=${dt}*(?:[^ 	
-\f\r"'\`<>=]|("|')|))|$)`, "g"), Lt = /'/g, Tt = /"/g, Zt = /^(?:script|style|textarea|title)$/i, pe = (e) => (t, ...i) => ({ _$litType$: e, strings: t, values: i }), a = pe(1), D = Symbol.for("lit-noChange"), d = Symbol.for("lit-nothing"), Pt = /* @__PURE__ */ new WeakMap(), P = O.createTreeWalker(O, 129);
+const _t = globalThis, St = (e) => e, st = _t.trustedTypes, Ct = st ? st.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, Ft = "$lit$", C = `lit$${Math.random().toFixed(9).slice(2)}$`, Kt = "?" + C, pe = `<${Kt}>`, O = document, K = () => O.createComment(""), Z = (e) => e === null || typeof e != "object" && typeof e != "function", bt = Array.isArray, ue = (e) => bt(e) || typeof e?.[Symbol.iterator] == "function", ct = `[ 	
+\f\r]`, B = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Mt = /-->/g, Et = />/g, E = RegExp(`>|${ct}(?:([^\\s"'>=/]+)(${ct}*=${ct}*(?:[^ 	
+\f\r"'\`<>=]|("|')|))|$)`, "g"), Lt = /'/g, Tt = /"/g, Zt = /^(?:script|style|textarea|title)$/i, ge = (e) => (t, ...i) => ({ _$litType$: e, strings: t, values: i }), a = ge(1), D = Symbol.for("lit-noChange"), c = Symbol.for("lit-nothing"), Pt = /* @__PURE__ */ new WeakMap(), P = O.createTreeWalker(O, 129);
 function Gt(e, t) {
-  if (!vt(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
+  if (!bt(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
   return Ct !== void 0 ? Ct.createHTML(t) : t;
 }
-const ue = (e, t) => {
+const me = (e, t) => {
   const i = e.length - 1, s = [];
   let n, r = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", o = B;
-  for (let c = 0; c < i; c++) {
-    const l = e[c];
-    let p, g, h = -1, m = 0;
-    for (; m < l.length && (o.lastIndex = m, g = o.exec(l), g !== null); ) m = o.lastIndex, o === B ? g[1] === "!--" ? o = Mt : g[1] !== void 0 ? o = Et : g[2] !== void 0 ? (Zt.test(g[2]) && (n = RegExp("</" + g[2], "g")), o = E) : g[3] !== void 0 && (o = E) : o === E ? g[0] === ">" ? (o = n ?? B, h = -1) : g[1] === void 0 ? h = -2 : (h = o.lastIndex - g[2].length, p = g[1], o = g[3] === void 0 ? E : g[3] === '"' ? Tt : Lt) : o === Tt || o === Lt ? o = E : o === Mt || o === Et ? o = B : (o = E, n = void 0);
-    const A = o === E && e[c + 1].startsWith("/>") ? " " : "";
-    r += o === B ? l + de : h >= 0 ? (s.push(p), l.slice(0, h) + qt + l.slice(h) + S + A) : l + S + (h === -2 ? c : A);
+  for (let d = 0; d < i; d++) {
+    const l = e[d];
+    let u, g, h = -1, m = 0;
+    for (; m < l.length && (o.lastIndex = m, g = o.exec(l), g !== null); ) m = o.lastIndex, o === B ? g[1] === "!--" ? o = Mt : g[1] !== void 0 ? o = Et : g[2] !== void 0 ? (Zt.test(g[2]) && (n = RegExp("</" + g[2], "g")), o = E) : g[3] !== void 0 && (o = E) : o === E ? g[0] === ">" ? (o = n ?? B, h = -1) : g[1] === void 0 ? h = -2 : (h = o.lastIndex - g[2].length, u = g[1], o = g[3] === void 0 ? E : g[3] === '"' ? Tt : Lt) : o === Tt || o === Lt ? o = E : o === Mt || o === Et ? o = B : (o = E, n = void 0);
+    const S = o === E && e[d + 1].startsWith("/>") ? " " : "";
+    r += o === B ? l + pe : h >= 0 ? (s.push(u), l.slice(0, h) + Ft + l.slice(h) + C + S) : l + C + (h === -2 ? d : S);
   }
   return [Gt(e, r + (e[i] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), s];
 };
@@ -286,29 +286,29 @@ class G {
     let n;
     this.parts = [];
     let r = 0, o = 0;
-    const c = t.length - 1, l = this.parts, [p, g] = ue(t, i);
-    if (this.el = G.createElement(p, s), P.currentNode = this.el.content, i === 2 || i === 3) {
+    const d = t.length - 1, l = this.parts, [u, g] = me(t, i);
+    if (this.el = G.createElement(u, s), P.currentNode = this.el.content, i === 2 || i === 3) {
       const h = this.el.content.firstChild;
       h.replaceWith(...h.childNodes);
     }
-    for (; (n = P.nextNode()) !== null && l.length < c; ) {
+    for (; (n = P.nextNode()) !== null && l.length < d; ) {
       if (n.nodeType === 1) {
-        if (n.hasAttributes()) for (const h of n.getAttributeNames()) if (h.endsWith(qt)) {
-          const m = g[o++], A = n.getAttribute(h).split(S), X = /([.?@])?(.*)/.exec(m);
-          l.push({ type: 1, index: r, name: X[2], strings: A, ctor: X[1] === "." ? me : X[1] === "?" ? fe : X[1] === "@" ? _e : at }), n.removeAttribute(h);
-        } else h.startsWith(S) && (l.push({ type: 6, index: r }), n.removeAttribute(h));
+        if (n.hasAttributes()) for (const h of n.getAttributeNames()) if (h.endsWith(Ft)) {
+          const m = g[o++], S = n.getAttribute(h).split(C), X = /([.?@])?(.*)/.exec(m);
+          l.push({ type: 1, index: r, name: X[2], strings: S, ctor: X[1] === "." ? _e : X[1] === "?" ? be : X[1] === "@" ? ve : at }), n.removeAttribute(h);
+        } else h.startsWith(C) && (l.push({ type: 6, index: r }), n.removeAttribute(h));
         if (Zt.test(n.tagName)) {
-          const h = n.textContent.split(S), m = h.length - 1;
+          const h = n.textContent.split(C), m = h.length - 1;
           if (m > 0) {
             n.textContent = st ? st.emptyScript : "";
-            for (let A = 0; A < m; A++) n.append(h[A], K()), P.nextNode(), l.push({ type: 2, index: ++r });
+            for (let S = 0; S < m; S++) n.append(h[S], K()), P.nextNode(), l.push({ type: 2, index: ++r });
             n.append(h[m], K());
           }
         }
       } else if (n.nodeType === 8) if (n.data === Kt) l.push({ type: 2, index: r });
       else {
         let h = -1;
-        for (; (h = n.data.indexOf(S, h + 1)) !== -1; ) l.push({ type: 7, index: r }), h += S.length - 1;
+        for (; (h = n.data.indexOf(C, h + 1)) !== -1; ) l.push({ type: 7, index: r }), h += C.length - 1;
       }
       r++;
     }
@@ -318,13 +318,13 @@ class G {
     return s.innerHTML = t, s;
   }
 }
-function z(e, t, i = e, s) {
+function N(e, t, i = e, s) {
   if (t === D) return t;
   let n = s !== void 0 ? i._$Co?.[s] : i._$Cl;
   const r = Z(t) ? void 0 : t._$litDirective$;
-  return n?.constructor !== r && (n?._$AO?.(!1), r === void 0 ? n = void 0 : (n = new r(e), n._$AT(e, i, s)), s !== void 0 ? (i._$Co ??= [])[s] = n : i._$Cl = n), n !== void 0 && (t = z(e, n._$AS(e, t.values), n, s)), t;
+  return n?.constructor !== r && (n?._$AO?.(!1), r === void 0 ? n = void 0 : (n = new r(e), n._$AT(e, i, s)), s !== void 0 ? (i._$Co ??= [])[s] = n : i._$Cl = n), n !== void 0 && (t = N(e, n._$AS(e, t.values), n, s)), t;
 }
-class ge {
+class fe {
   constructor(t, i) {
     this._$AV = [], this._$AN = void 0, this._$AD = t, this._$AM = i;
   }
@@ -337,11 +337,11 @@ class ge {
   u(t) {
     const { el: { content: i }, parts: s } = this._$AD, n = (t?.creationScope ?? O).importNode(i, !0);
     P.currentNode = n;
-    let r = P.nextNode(), o = 0, c = 0, l = s[0];
+    let r = P.nextNode(), o = 0, d = 0, l = s[0];
     for (; l !== void 0; ) {
       if (o === l.index) {
-        let p;
-        l.type === 2 ? p = new J(r, r.nextSibling, this, t) : l.type === 1 ? p = new l.ctor(r, l.name, l.strings, this, t) : l.type === 6 && (p = new be(r, this, t)), this._$AV.push(p), l = s[++c];
+        let u;
+        l.type === 2 ? u = new J(r, r.nextSibling, this, t) : l.type === 1 ? u = new l.ctor(r, l.name, l.strings, this, t) : l.type === 6 && (u = new we(r, this, t)), this._$AV.push(u), l = s[++d];
       }
       o !== l?.index && (r = P.nextNode(), o++);
     }
@@ -357,7 +357,7 @@ class J {
     return this._$AM?._$AU ?? this._$Cv;
   }
   constructor(t, i, s, n) {
-    this.type = 2, this._$AH = d, this._$AN = void 0, this._$AA = t, this._$AB = i, this._$AM = s, this.options = n, this._$Cv = n?.isConnected ?? !0;
+    this.type = 2, this._$AH = c, this._$AN = void 0, this._$AA = t, this._$AB = i, this._$AM = s, this.options = n, this._$Cv = n?.isConnected ?? !0;
   }
   get parentNode() {
     let t = this._$AA.parentNode;
@@ -371,7 +371,7 @@ class J {
     return this._$AB;
   }
   _$AI(t, i = this) {
-    t = z(this, t, i), Z(t) ? t === d || t == null || t === "" ? (this._$AH !== d && this._$AR(), this._$AH = d) : t !== this._$AH && t !== D && this._(t) : t._$litType$ !== void 0 ? this.$(t) : t.nodeType !== void 0 ? this.T(t) : he(t) ? this.k(t) : this._(t);
+    t = N(this, t, i), Z(t) ? t === c || t == null || t === "" ? (this._$AH !== c && this._$AR(), this._$AH = c) : t !== this._$AH && t !== D && this._(t) : t._$litType$ !== void 0 ? this.$(t) : t.nodeType !== void 0 ? this.T(t) : ue(t) ? this.k(t) : this._(t);
   }
   O(t) {
     return this._$AA.parentNode.insertBefore(t, this._$AB);
@@ -380,13 +380,13 @@ class J {
     this._$AH !== t && (this._$AR(), this._$AH = this.O(t));
   }
   _(t) {
-    this._$AH !== d && Z(this._$AH) ? this._$AA.nextSibling.data = t : this.T(O.createTextNode(t)), this._$AH = t;
+    this._$AH !== c && Z(this._$AH) ? this._$AA.nextSibling.data = t : this.T(O.createTextNode(t)), this._$AH = t;
   }
   $(t) {
     const { values: i, _$litType$: s } = t, n = typeof s == "number" ? this._$AC(t) : (s.el === void 0 && (s.el = G.createElement(Gt(s.h, s.h[0]), this.options)), s);
     if (this._$AH?._$AD === n) this._$AH.p(i);
     else {
-      const r = new ge(n, this), o = r.u(this.options);
+      const r = new fe(n, this), o = r.u(this.options);
       r.p(i), this.T(o), this._$AH = r;
     }
   }
@@ -395,7 +395,7 @@ class J {
     return i === void 0 && Pt.set(t.strings, i = new G(t)), i;
   }
   k(t) {
-    vt(this._$AH) || (this._$AH = [], this._$AR());
+    bt(this._$AH) || (this._$AH = [], this._$AR());
     const i = this._$AH;
     let s, n = 0;
     for (const r of t) n === i.length ? i.push(s = new J(this.O(K()), this.O(K()), this, this.options)) : s = i[n], s._$AI(r), n++;
@@ -419,53 +419,53 @@ class at {
     return this._$AM._$AU;
   }
   constructor(t, i, s, n, r) {
-    this.type = 1, this._$AH = d, this._$AN = void 0, this.element = t, this.name = i, this._$AM = n, this.options = r, s.length > 2 || s[0] !== "" || s[1] !== "" ? (this._$AH = Array(s.length - 1).fill(new String()), this.strings = s) : this._$AH = d;
+    this.type = 1, this._$AH = c, this._$AN = void 0, this.element = t, this.name = i, this._$AM = n, this.options = r, s.length > 2 || s[0] !== "" || s[1] !== "" ? (this._$AH = Array(s.length - 1).fill(new String()), this.strings = s) : this._$AH = c;
   }
   _$AI(t, i = this, s, n) {
     const r = this.strings;
     let o = !1;
-    if (r === void 0) t = z(this, t, i, 0), o = !Z(t) || t !== this._$AH && t !== D, o && (this._$AH = t);
+    if (r === void 0) t = N(this, t, i, 0), o = !Z(t) || t !== this._$AH && t !== D, o && (this._$AH = t);
     else {
-      const c = t;
-      let l, p;
-      for (t = r[0], l = 0; l < r.length - 1; l++) p = z(this, c[s + l], i, l), p === D && (p = this._$AH[l]), o ||= !Z(p) || p !== this._$AH[l], p === d ? t = d : t !== d && (t += (p ?? "") + r[l + 1]), this._$AH[l] = p;
+      const d = t;
+      let l, u;
+      for (t = r[0], l = 0; l < r.length - 1; l++) u = N(this, d[s + l], i, l), u === D && (u = this._$AH[l]), o ||= !Z(u) || u !== this._$AH[l], u === c ? t = c : t !== c && (t += (u ?? "") + r[l + 1]), this._$AH[l] = u;
     }
     o && !n && this.j(t);
   }
   j(t) {
-    t === d ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t ?? "");
+    t === c ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, t ?? "");
   }
 }
-class me extends at {
+class _e extends at {
   constructor() {
     super(...arguments), this.type = 3;
   }
   j(t) {
-    this.element[this.name] = t === d ? void 0 : t;
+    this.element[this.name] = t === c ? void 0 : t;
   }
 }
-class fe extends at {
+class be extends at {
   constructor() {
     super(...arguments), this.type = 4;
   }
   j(t) {
-    this.element.toggleAttribute(this.name, !!t && t !== d);
+    this.element.toggleAttribute(this.name, !!t && t !== c);
   }
 }
-class _e extends at {
+class ve extends at {
   constructor(t, i, s, n, r) {
     super(t, i, s, n, r), this.type = 5;
   }
   _$AI(t, i = this) {
-    if ((t = z(this, t, i, 0) ?? d) === D) return;
-    const s = this._$AH, n = t === d && s !== d || t.capture !== s.capture || t.once !== s.once || t.passive !== s.passive, r = t !== d && (s === d || n);
+    if ((t = N(this, t, i, 0) ?? c) === D) return;
+    const s = this._$AH, n = t === c && s !== c || t.capture !== s.capture || t.once !== s.once || t.passive !== s.passive, r = t !== c && (s === c || n);
     n && this.element.removeEventListener(this.name, this, s), r && this.element.addEventListener(this.name, this, t), this._$AH = t;
   }
   handleEvent(t) {
     typeof this._$AH == "function" ? this._$AH.call(this.options?.host ?? this.element, t) : this._$AH.handleEvent(t);
   }
 }
-class be {
+class we {
   constructor(t, i, s) {
     this.element = t, this.type = 6, this._$AN = void 0, this._$AM = i, this.options = s;
   }
@@ -473,12 +473,12 @@ class be {
     return this._$AM._$AU;
   }
   _$AI(t) {
-    z(this, t);
+    N(this, t);
   }
 }
-const ve = bt.litHtmlPolyfillSupport;
-ve?.(G, J), (bt.litHtmlVersions ??= []).push("3.3.3");
-const we = (e, t, i) => {
+const $e = _t.litHtmlPolyfillSupport;
+$e?.(G, J), (_t.litHtmlVersions ??= []).push("3.3.3");
+const xe = (e, t, i) => {
   const s = i?.renderBefore ?? t;
   let n = s._$litPart$;
   if (n === void 0) {
@@ -492,7 +492,7 @@ const we = (e, t, i) => {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const wt = globalThis;
+const vt = globalThis;
 class w extends I {
   constructor() {
     super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
@@ -503,7 +503,7 @@ class w extends I {
   }
   update(t) {
     const i = this.render();
-    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(t), this._$Do = we(i, this.renderRoot, this.renderOptions);
+    this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(t), this._$Do = xe(i, this.renderRoot, this.renderOptions);
   }
   connectedCallback() {
     super.connectedCallback(), this._$Do?.setConnected(!0);
@@ -515,10 +515,10 @@ class w extends I {
     return D;
   }
 }
-w._$litElement$ = !0, w.finalized = !0, wt.litElementHydrateSupport?.({ LitElement: w });
-const $e = wt.litElementPolyfillSupport;
-$e?.({ LitElement: w });
-(wt.litElementVersions ??= []).push("4.2.2");
+w._$litElement$ = !0, w.finalized = !0, vt.litElementHydrateSupport?.({ LitElement: w });
+const ye = vt.litElementPolyfillSupport;
+ye?.({ LitElement: w });
+(vt.litElementVersions ??= []).push("4.2.2");
 /**
  * @license
  * Copyright 2017 Google LLC
@@ -534,29 +534,29 @@ const R = (e) => (t, i) => {
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const xe = { attribute: !0, type: String, converter: it, reflect: !1, hasChanged: _t }, ye = (e = xe, t, i) => {
+const Ae = { attribute: !0, type: String, converter: it, reflect: !1, hasChanged: ft }, ke = (e = Ae, t, i) => {
   const { kind: s, metadata: n } = i;
   let r = globalThis.litPropertyMetadata.get(n);
   if (r === void 0 && globalThis.litPropertyMetadata.set(n, r = /* @__PURE__ */ new Map()), s === "setter" && ((e = Object.create(e)).wrapped = !0), r.set(i.name, e), s === "accessor") {
     const { name: o } = i;
-    return { set(c) {
+    return { set(d) {
       const l = t.get.call(this);
-      t.set.call(this, c), this.requestUpdate(o, l, e, !0, c);
-    }, init(c) {
-      return c !== void 0 && this.C(o, void 0, e, c), c;
+      t.set.call(this, d), this.requestUpdate(o, l, e, !0, d);
+    }, init(d) {
+      return d !== void 0 && this.C(o, void 0, e, d), d;
     } };
   }
   if (s === "setter") {
     const { name: o } = i;
-    return function(c) {
+    return function(d) {
       const l = this[o];
-      t.call(this, c), this.requestUpdate(o, l, e, !0, c);
+      t.call(this, d), this.requestUpdate(o, l, e, !0, d);
     };
   }
   throw Error("Unsupported decorator location: " + s);
 };
-function u(e) {
-  return (t, i) => typeof i == "object" ? ye(e, t, i) : ((s, n, r) => {
+function p(e) {
+  return (t, i) => typeof i == "object" ? ke(e, t, i) : ((s, n, r) => {
     const o = n.hasOwnProperty(r);
     return n.constructor.createProperty(r, s), o ? Object.getOwnPropertyDescriptor(n, r) : void 0;
   })(e, t, i);
@@ -567,28 +567,28 @@ function u(e) {
  * SPDX-License-Identifier: BSD-3-Clause
  */
 function b(e) {
-  return u({ ...e, state: !0, attribute: !1 });
+  return p({ ...e, state: !0, attribute: !1 });
 }
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const ke = (e, t, i) => (i.configurable = !0, i.enumerable = !0, Reflect.decorate && typeof t != "object" && Object.defineProperty(e, t, i), i);
+const Se = (e, t, i) => (i.configurable = !0, i.enumerable = !0, Reflect.decorate && typeof t != "object" && Object.defineProperty(e, t, i), i);
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-function Ae(e, t) {
+function Ce(e, t) {
   return (i, s, n) => {
     const r = (o) => o.renderRoot?.querySelector(e) ?? null;
-    return ke(i, s, { get() {
+    return Se(i, s, { get() {
       return r(this);
     } });
   };
 }
-class Se {
+class Me {
   constructor(t) {
     this.hass = t;
   }
@@ -644,7 +644,7 @@ class Se {
     return this.hass.connection.sendMessagePromise({ type: t, ...i });
   }
 }
-const Ce = M`
+const Ee = A`
   :host {
     --bg: #fbf3e9;
     --surface: #fffaf2;
@@ -665,8 +665,6 @@ const Ce = M`
     --shadow: 0 2px 10px rgba(120, 80, 40, 0.12);
     color-scheme: light;
 
-    display: block;
-    min-height: 100vh;
     background: var(--bg);
     color: var(--text);
     /* Home Assistant's own typography (Roboto), themable via its token. */
@@ -696,7 +694,7 @@ const Ce = M`
     --shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
     color-scheme: dark;
   }
-`, j = M`
+`, j = A`
   * {
     box-sizing: border-box;
   }
@@ -739,16 +737,7 @@ const Ce = M`
     border-radius: 6px;
   }
 
-  label.field {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--text-soft);
-  }
-
-  div.field {
+  .field {
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -1096,8 +1085,47 @@ const Ce = M`
     color: var(--text-soft);
     padding: 28px;
   }
-`, ht = Array.from({ length: 24 }, (e, t) => t), L = 1500, T = 6500;
-function Me() {
+`, Wt = A`
+  .cells {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(24, minmax(0, 1fr));
+    gap: 1px;
+  }
+  .cells::before,
+  .cells::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border);
+    opacity: 0.5;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .cells::before {
+    top: 0;
+  }
+  .cells::after {
+    bottom: 0;
+  }
+  .cell {
+    position: relative;
+    overflow: hidden;
+  }
+  .cell.explicit {
+    background: var(--border);
+  }
+  .cell .fill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
+  }
+`, dt = Array.from({ length: 24 }, (e, t) => t), L = 1500, T = 6500;
+function Le() {
   return {
     min_brightness: 5,
     max_brightness: 100,
@@ -1115,7 +1143,7 @@ function Me() {
     max_sunset_time: null
   };
 }
-function Ee() {
+function Te() {
   return {
     min_brightness: 1,
     max_brightness: 100,
@@ -1127,36 +1155,41 @@ function Ee() {
     hours: Array.from({ length: 24 }, () => null)
   };
 }
-function Le(e, t) {
-  return { id: e, name: t, sun: Me(), lights: {} };
+function Pe(e, t) {
+  return { id: e, name: t, sun: Le(), lights: {} };
 }
 function et(e) {
   return e ? e.supports_color_temp || e.supports_rgb : !0;
 }
-function lt(e) {
+function wt(e) {
   const t = Math.max(1e3, Math.min(12e3, e)) / 100;
   let i, s, n;
   t <= 66 ? (i = 255, s = 99.47 * Math.log(t) - 161.12) : (i = 329.7 * Math.pow(t - 60, -0.1332), s = 288.12 * Math.pow(t - 60, -0.0755)), t >= 66 ? n = 255 : t <= 19 ? n = 0 : n = 138.52 * Math.log(t - 10) - 305.04;
   const r = (o) => Math.max(0, Math.min(255, Math.round(o)));
   return `rgb(${r(i)}, ${r(s)}, ${r(n)})`;
 }
-function ut(e, t) {
+function Jt(e, t) {
+  if (t) return "var(--accent-light)";
+  const i = e.rgb_color;
+  return i ? `rgb(${i[0]}, ${i[1]}, ${i[2]})` : wt(e.color_temp);
+}
+function pt(e, t) {
   const s = [];
   for (let n = 0; n <= 10; n++)
-    s.push(lt(e + (t - e) * n / 10));
+    s.push(wt(e + (t - e) * n / 10));
   return `linear-gradient(90deg, ${s.join(", ")})`;
 }
-function Wt(e) {
+function Xt(e) {
   const t = e < 0 ? "−" : "", i = Math.round(Math.abs(e) / 60), s = Math.floor(i / 60), n = i % 60;
   return s === 0 ? `${t}${n} min` : n === 0 ? `${t}${s} h` : `${t}${s} h ${n} min`;
 }
-function Te(e) {
+function Oe(e) {
   return String(e).padStart(2, "0");
 }
-function Jt(e) {
+function Yt(e) {
   return "#" + e.map((t) => Math.max(0, Math.min(255, Math.round(t))).toString(16).padStart(2, "0")).join("");
 }
-function Pe(e) {
+function Re(e) {
   const t = e.replace("#", "");
   return [
     parseInt(t.slice(0, 2), 16) || 0,
@@ -1164,7 +1197,7 @@ function Pe(e) {
     parseInt(t.slice(4, 6), 16) || 0
   ];
 }
-function gt() {
+function ut() {
   const e = /* @__PURE__ */ new Date(), t = e.getHours() * 60 + e.getMinutes();
   return Math.min(1435, Math.round(t / 5) * 5) / 60;
 }
@@ -1176,24 +1209,24 @@ const x = (e) => a`<svg viewBox="0 0 24 24" aria-hidden="true">
   "M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M11,16.5L6.5,12L7.91,10.59L11,13.67L16.59,8.09L18,9.5L11,16.5Z"
 ), It = x(
   "M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"
-), Oe = x(
-  "M12,2A7,7 0 0,0 5,9C5,11.38 6.19,13.47 8,14.74V17A1,1 0 0,0 9,18H15A1,1 0 0,0 16,17V14.74C17.81,13.47 19,11.38 19,9A7,7 0 0,0 12,2M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21M12,4A5,5 0 0,1 17,9C17,10.82 15.98,12.41 14.5,13.28L14,13.58V16H10V13.58L9.5,13.28C8.02,12.41 7,10.82 7,9A5,5 0 0,1 12,4Z"
-), Re = x(
-  "M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"
 ), He = x(
+  "M12,2A7,7 0 0,0 5,9C5,11.38 6.19,13.47 8,14.74V17A1,1 0 0,0 9,18H15A1,1 0 0,0 16,17V14.74C17.81,13.47 19,11.38 19,9A7,7 0 0,0 12,2M9,21A1,1 0 0,0 10,22H14A1,1 0 0,0 15,21V20H9V21M12,4A5,5 0 0,1 17,9C17,10.82 15.98,12.41 14.5,13.28L14,13.58V16H10V13.58L9.5,13.28C8.02,12.41 7,10.82 7,9A5,5 0 0,1 12,4Z"
+), Ie = x(
+  "M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"
+), De = x(
   "M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"
-), Ie = x("M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"), Dt = x(
+), Ne = x("M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"), Dt = x(
   "M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7 7 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54a7 7 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.31 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96a7 7 0 0 0 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54a7 7 0 0 0 1.62-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"
-), zt = x(
+), Nt = x(
   "M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8M12,10A2,2 0 0,0 10,12A2,2 0 0,0 12,14A2,2 0 0,0 14,12A2,2 0 0,0 12,10M10,22C9.75,22 9.54,21.82 9.5,21.58L9.13,18.93C8.5,18.68 7.96,18.34 7.44,17.94L4.95,18.95C4.73,19.03 4.46,18.95 4.34,18.73L2.34,15.27C2.21,15.05 2.27,14.78 2.46,14.63L4.57,12.97L4.5,12L4.57,11L2.46,9.37C2.27,9.22 2.21,8.95 2.34,8.73L4.34,5.27C4.46,5.05 4.73,4.96 4.95,5.05L7.44,6.05C7.96,5.66 8.5,5.32 9.13,5.07L9.5,2.42C9.54,2.18 9.75,2 10,2H14C14.25,2 14.46,2.18 14.5,2.42L14.87,5.07C15.5,5.32 16.04,5.66 16.56,6.05L19.05,5.05C19.27,4.96 19.54,5.05 19.66,5.27L21.66,8.73C21.79,8.95 21.73,9.22 21.54,9.37L19.43,11L19.5,12L19.43,13L21.54,14.63C21.73,14.78 21.79,15.05 21.66,15.27L19.66,18.73C19.54,18.95 19.27,19.04 19.05,18.95L16.56,17.95C16.04,18.34 15.5,18.68 14.87,18.93L14.5,21.58C14.46,21.82 14.25,22 14,22H10M11.25,4L10.88,6.61C9.68,6.86 8.62,7.5 7.85,8.39L5.44,7.35L4.69,8.65L6.8,10.2C6.4,11.37 6.4,12.64 6.8,13.8L4.68,15.36L5.43,16.66L7.86,15.62C8.63,16.5 9.68,17.14 10.87,17.38L11.24,20H12.76L13.13,17.39C14.32,17.14 15.37,16.5 16.14,15.62L18.57,16.66L19.32,15.36L17.2,13.81C17.6,12.64 17.6,11.37 17.2,10.2L19.31,8.65L18.56,7.35L16.15,8.39C15.38,7.5 14.32,6.86 13.12,6.62L12.75,4H11.25Z"
 );
 function _(e, t) {
   return t ? a`<details class="section">
-    <summary>${e} ${He}</summary>
+    <summary>${e} ${De}</summary>
     <p class="muted">${t}</p>
   </details>` : a`<div class="section">${e}</div>`;
 }
-function Xt(e, t, i, s, n) {
+function Qt(e, t, i, s, n) {
   const r = Math.max(0, Math.min(100, (e - t) / (i - t) * 100));
   return a`<div class="minmax">
     <div class="minmax-track">
@@ -1209,19 +1242,19 @@ function Xt(e, t, i, s, n) {
     />
   </div>`;
 }
-function nt(e, t, i, s, n, r, o, c, l) {
-  const p = (g) => (g - n) / (r - n) * 100;
+function nt(e, t, i, s, n, r, o, d, l) {
+  const u = (g) => (g - n) / (r - n) * 100;
   return a`<div class="field">
     <span class="field-head">
       <span>${e}</span>
       <b>${i}–${s}${t}</b>
     </span>
-    ${l ? a`<div class="temp-gradient" style="background:${l}"></div>` : d}
+    ${l ? a`<div class="temp-gradient" style="background:${l}"></div>` : c}
     <div class="minmax">
       <div class="minmax-track">
         <div
           class="minmax-fill"
-          style="left:${p(i)}%;width:${Math.max(0, p(s) - p(i))}%"
+          style="left:${u(i)}%;width:${Math.max(0, u(s) - u(i))}%"
         ></div>
       </div>
       <input
@@ -1232,7 +1265,7 @@ function nt(e, t, i, s, n, r, o, c, l) {
         .value=${String(i)}
         @input=${(g) => {
     const h = g.target, m = Math.min(Number(h.value), s);
-    h.value = String(m), c(m, s);
+    h.value = String(m), d(m, s);
   }}
       />
       <input
@@ -1243,21 +1276,21 @@ function nt(e, t, i, s, n, r, o, c, l) {
         .value=${String(s)}
         @input=${(g) => {
     const h = g.target, m = Math.max(Number(h.value), i);
-    h.value = String(m), c(i, m);
+    h.value = String(m), d(i, m);
   }}
       />
     </div>
   </div>`;
 }
 function V(e, t, i, s, n, r) {
-  const o = t === 0 && r ? r : Wt(t);
+  const o = t === 0 && r ? r : Xt(t);
   return a`<label class="field">
     ${e}
-    ${Xt(t, i, s, 60, n)}
+    ${Qt(t, i, s, 60, n)}
     <span class="duration-preview">${o}</span>
   </label>`;
 }
-function De(e, t, i) {
+function ze(e, t, i) {
   return a`<label class="field"
     >${e}
     <input
@@ -1267,7 +1300,7 @@ function De(e, t, i) {
     />
   </label>`;
 }
-function Nt(e, t, i, s) {
+function zt(e, t, i, s) {
   return a`<label class="field"
     >${e}
     <input
@@ -1282,14 +1315,14 @@ function Nt(e, t, i, s) {
     />
   </label>`;
 }
-function q(e, t, i, s, n, r, o, c) {
+function F(e, t, i, s, n, r, o, d) {
   return a`<label class="field">
     <span class="field-head">
       <span>${e}</span>
       <b>${t}${r}</b>
     </span>
-    ${c ? a`<div class="temp-gradient" style="background:${c}"></div>` : d}
-    ${Xt(t, i, s, n, o)}
+    ${d ? a`<div class="temp-gradient" style="background:${d}"></div>` : c}
+    ${Qt(t, i, s, n, o)}
   </label>`;
 }
 function jt(e, t, i) {
@@ -1303,7 +1336,7 @@ function jt(e, t, i) {
     />
   </label>`;
 }
-function Yt(e, t, i) {
+function te(e, t, i) {
   return a`<label class="toggle">
     <input
       type="checkbox"
@@ -1327,10 +1360,10 @@ function Ut(e, t, i, s) {
     </select>
   </label>`;
 }
-var ze = Object.defineProperty, Ne = Object.getOwnPropertyDescriptor, k = (e, t, i, s) => {
-  for (var n = s > 1 ? void 0 : s ? Ne(t, i) : t, r = e.length - 1, o; r >= 0; r--)
+var je = Object.defineProperty, Ue = Object.getOwnPropertyDescriptor, k = (e, t, i, s) => {
+  for (var n = s > 1 ? void 0 : s ? Ue(t, i) : t, r = e.length - 1, o; r >= 0; r--)
     (o = e[r]) && (n = (s ? o(t, i, n) : o(n)) || n);
-  return s && n && ze(t, i, n), n;
+  return s && n && je(t, i, n), n;
 };
 let $ = class extends w {
   constructor() {
@@ -1341,10 +1374,10 @@ let $ = class extends w {
       return a`<div class="card"><div class="empty">Loading timeline…</div></div>`;
     const e = Math.floor(this.previewHour) % 24;
     return a`<div class="card">
-      ${this.previewActive ? this._scrubBar() : d}
+      ${this.previewActive ? this._scrubBar() : c}
       <div class="scroll ${this.scrollLocked ? "locked" : ""}">
         <div class="rows">
-          ${this._scrubRow()}
+          ${this.previewActive ? this._scrubRow() : c}
           ${this._headerRow(e)}
           ${this._sunRow()}
           ${this._lightGroups().map(
@@ -1381,7 +1414,8 @@ let $ = class extends w {
       @input=${(e) => this._emit("scrub", Number(e.target.value) / 60)}
     />`;
   }
-  // Desktop: part of the grid, so the track lines up with the hour columns.
+  // Desktop, while previewing: part of the grid, so the track lines up with
+  // the hour columns.
   _scrubRow() {
     return a`<div class="gridrow scrubrow">
       <div class="label">
@@ -1416,15 +1450,15 @@ let $ = class extends w {
     </div>`;
   }
   _jumpToNow() {
-    this._emit("scrub", gt());
+    this._emit("scrub", ut());
   }
   _headerRow(e) {
     return a`<div class="gridrow headrow">
       <div class="label"></div>
       <div class="hours">
-        ${ht.map(
+        ${dt.map(
       (t) => a`<div class="hourhead ${t === e ? "now" : ""}">
-            ${Te(t)}
+            ${Oe(t)}
           </div>`
     )}
       </div>
@@ -1449,7 +1483,7 @@ let $ = class extends w {
         ${Dt}
       </div>
       <div class="cells">
-        ${ht.map((i) => this._cell(e[i], "readonly", !1, !1))}
+        ${dt.map((i) => this._cell(e[i], "readonly", !1, !1))}
         ${this._playhead()}
       </div>
     </div>`;
@@ -1478,7 +1512,7 @@ let $ = class extends w {
         ${this._statusTag(e.entity_id)} ${Dt}
       </div>
       <div class="cells">
-        ${ht.map((s) => {
+        ${dt.map((s) => {
       const n = t[s], r = this.selected?.entityId === e.entity_id && this.selected?.hour === s;
       return this._cell(
         n,
@@ -1499,7 +1533,7 @@ let $ = class extends w {
   // mode isn't. Absent while the first status poll is in flight.
   _statusTag(e) {
     const t = this.status?.lights[e];
-    if (!t) return d;
+    if (!t) return c;
     if (t.state !== "on") {
       const i = t.state === "off";
       return a`<span class="tag idle">${i ? "Off" : "Unavailable"}</span>`;
@@ -1507,18 +1541,18 @@ let $ = class extends w {
     return t.manual_control ? a`<span class="tag manual">Manual</span>` : a`<span class="tag">Auto</span>`;
   }
   _cell(e, t, i, s, n, r = !1) {
-    const o = e ? e.brightness : 0, c = e && "rgb_color" in e ? e.rgb_color : null, l = e ? r ? "var(--accent-light)" : c ? `rgb(${c[0]}, ${c[1]}, ${c[2]})` : lt(e.color_temp) : "transparent", p = [
+    const o = e ? e.brightness : 0, d = e ? Jt(e, r) : "transparent", l = [
       "cell",
       t,
       i ? "explicit" : "",
       s ? "selected" : ""
     ].join(" ");
     return a`<div
-      class=${p}
+      class=${l}
       @click=${n}
       title=${e ? `${e.brightness}% · ${e.color_temp} K` : ""}
     >
-      <div class="fill" style="height:${o}%;background:${l}"></div>
+      <div class="fill" style="height:${o}%;background:${d}"></div>
     </div>`;
   }
   _emit(e, t) {
@@ -1529,16 +1563,25 @@ let $ = class extends w {
 };
 $.styles = [
   j,
-  M`
+  Wt,
+  A`
       :host {
         display: block;
         height: 100%;
       }
       .card {
         box-sizing: border-box;
+        height: 100%;
+        margin-bottom: 0;
+        display: flex;
+        flex-direction: column;
       }
       .scroll {
+        flex: 1;
+        min-height: 0;
         max-width: 100%;
+        overflow-y: auto;
+        overscroll-behavior: contain;
         padding-bottom: 6px;
       }
       .rows {
@@ -1559,33 +1602,6 @@ $.styles = [
           margin-top: 6px;
         }
       }
-      /* The 24 cells of one row, with row-level overlays (max line, playhead). */
-      .cells {
-        position: relative;
-        display: grid;
-        grid-template-columns: repeat(24, 1fr);
-        gap: 1px;
-      }
-      /* Continuous dim reference lines at the 100% mark (top) and baseline
-         (bottom). Fills paint above them so even 1px values stay visible. */
-      .cells::before,
-      .cells::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: var(--border);
-        opacity: 0.5;
-        z-index: 2;
-        pointer-events: none;
-      }
-      .cells::before {
-        top: 0;
-      }
-      .cells::after {
-        bottom: 0;
-      }
       /* Thin light playhead at the currently shown time. */
       .cells .playhead {
         position: absolute;
@@ -1601,6 +1617,14 @@ $.styles = [
         display: grid;
         grid-template-columns: repeat(24, 1fr);
         gap: 1px;
+      }
+      /* Above the rows' playheads (z-index 4) so scrolling content always
+         passes underneath the hour numbers. */
+      .headrow {
+        position: sticky;
+        top: 0;
+        z-index: 6;
+        background: var(--surface);
       }
       .label {
         z-index: 3;
@@ -1716,12 +1740,8 @@ $.styles = [
       .now-btn:hover {
         color: var(--accent-strong);
       }
-      /* Sun-following cells have no background — that's the default state;
-         only overrides get a marker. */
       .cell {
-        position: relative;
         height: 42px;
-        overflow: hidden;
         cursor: pointer;
       }
       @media (max-width: 960px) {
@@ -1731,16 +1751,6 @@ $.styles = [
       }
       .cell.readonly {
         cursor: default;
-      }
-      .cell .fill {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 3;
-      }
-      .cell.explicit {
-        background: var(--border);
       }
       .cell.selected {
         border: 2px var(--accent-strong) solid;
@@ -1777,14 +1787,9 @@ $.styles = [
         :host {
           min-height: 0;
         }
-        /* Fill the viewport to the very bottom; the grid fits the width (no
-           horizontal scrolling) and scrolls internally only vertically. */
+        /* Edge to edge: the grid fits the width (no horizontal scrolling). */
         .card {
           padding: 0;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          margin-bottom: 0;
         }
         .scrub-bar {
           display: block;
@@ -1795,11 +1800,7 @@ $.styles = [
           display: none;
         }
         .scroll {
-          flex: 1;
-          min-height: 0;
-          overflow-y: auto;
           overflow-x: hidden;
-          overscroll-behavior: contain;
           -webkit-overflow-scrolling: touch;
           /* The content scrolls clear of the iOS home indicator. */
           padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
@@ -1846,18 +1847,11 @@ $.styles = [
         .headrow {
           margin-bottom: 0;
           padding-bottom: 4px;
+          background: var(--bg);
         }
         .hourhead {
           font-size: 0.55rem;
           overflow: hidden;
-        }
-        /* Above the rows' playheads (z-index 4) so scrolling content always
-           passes underneath the hour numbers. */
-        .headrow {
-          position: sticky;
-          top: 0;
-          z-index: 6;
-          background: var(--bg);
         }
         /* Scrolls with the content as its last item. */
         .legend {
@@ -1867,115 +1861,82 @@ $.styles = [
     `
 ];
 k([
-  u({ attribute: !1 })
+  p({ attribute: !1 })
 ], $.prototype, "lights", 2);
 k([
-  u({ attribute: !1 })
+  p({ attribute: !1 })
 ], $.prototype, "timeline", 2);
 k([
-  u({ attribute: !1 })
+  p({ attribute: !1 })
 ], $.prototype, "status", 2);
 k([
-  u({ attribute: !1 })
+  p({ attribute: !1 })
 ], $.prototype, "selected", 2);
 k([
-  u({ attribute: !1 })
+  p({ attribute: !1 })
 ], $.prototype, "selectedRow", 2);
 k([
-  u({ type: Number })
+  p({ type: Number })
 ], $.prototype, "previewHour", 2);
 k([
-  u({ type: Boolean })
+  p({ type: Boolean })
 ], $.prototype, "scrollLocked", 2);
 k([
-  u({ type: Boolean })
+  p({ type: Boolean })
 ], $.prototype, "previewActive", 2);
 $ = k([
   R("sundial-timeline-grid")
 ], $);
-var je = Object.defineProperty, Ue = Object.getOwnPropertyDescriptor, $t = (e, t, i, s) => {
-  for (var n = s > 1 ? void 0 : s ? Ue(t, i) : t, r = e.length - 1, o; r >= 0; r--)
+var Be = Object.defineProperty, Ve = Object.getOwnPropertyDescriptor, $t = (e, t, i, s) => {
+  for (var n = s > 1 ? void 0 : s ? Ve(t, i) : t, r = e.length - 1, o; r >= 0; r--)
     (o = e[r]) && (n = (s ? o(t, i, n) : o(n)) || n);
-  return s && n && je(t, i, n), n;
+  return s && n && Be(t, i, n), n;
 };
 let W = class extends w {
   constructor() {
     super(...arguments), this.cells = [], this.colorless = !1;
   }
   render() {
-    return a`<div class="strip">
-      ${this.cells.map((e) => {
-      const t = e.rgb_color, i = this.colorless ? "var(--accent-light)" : t ? `rgb(${t[0]}, ${t[1]}, ${t[2]})` : lt(e.color_temp);
-      return a`<div class="cell ${e.explicit ? "explicit" : ""}">
+    return a`<div class="cells">
+      ${this.cells.map(
+      (e) => a`<div class="cell ${e.explicit ? "explicit" : ""}">
           <div
             class="fill"
-            style="height:${e.brightness}%;background:${i}"
+            style="height:${e.brightness}%;background:${Jt(
+        e,
+        this.colorless
+      )}"
           ></div>
-        </div>`;
-    })}
+        </div>`
+    )}
     </div>`;
   }
 };
-W.styles = M`
-    :host {
-      display: block;
-    }
-    .strip {
-      position: relative;
-      display: grid;
-      grid-template-columns: repeat(24, minmax(0, 1fr));
-      gap: 1px;
-      height: 42px;
-      overflow: hidden;
-    }
-    /* Continuous dim reference lines, mirroring the timeline rows; fills
-       paint above them so even 1px values stay visible. */
-    .strip::before,
-    .strip::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--border);
-      opacity: 0.5;
-      z-index: 2;
-      pointer-events: none;
-    }
-    .strip::before {
-      top: 0;
-    }
-    .strip::after {
-      bottom: 0;
-    }
-    .cell {
-      position: relative;
-      overflow: hidden;
-    }
-    .cell.explicit {
-      background: var(--border);
-    }
-    .fill {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 3;
-    }
-  `;
+W.styles = [
+  Wt,
+  A`
+      :host {
+        display: block;
+      }
+      .cells {
+        height: 42px;
+        overflow: hidden;
+      }
+    `
+];
 $t([
-  u({ attribute: !1 })
+  p({ attribute: !1 })
 ], W.prototype, "cells", 2);
 $t([
-  u({ type: Boolean })
+  p({ type: Boolean })
 ], W.prototype, "colorless", 2);
 W = $t([
   R("sundial-row-preview")
 ], W);
-var Be = Object.defineProperty, Ve = Object.getOwnPropertyDescriptor, Qt = (e, t, i, s) => {
-  for (var n = s > 1 ? void 0 : s ? Ve(t, i) : t, r = e.length - 1, o; r >= 0; r--)
+var qe = Object.defineProperty, Fe = Object.getOwnPropertyDescriptor, ee = (e, t, i, s) => {
+  for (var n = s > 1 ? void 0 : s ? Fe(t, i) : t, r = e.length - 1, o; r >= 0; r--)
     (o = e[r]) && (n = (s ? o(t, i, n) : o(n)) || n);
-  return s && n && Be(t, i, n), n;
+  return s && n && qe(t, i, n), n;
 };
 const Y = 4 * 3600, Bt = 4 * 3600;
 let rt = class extends w {
@@ -1999,7 +1960,7 @@ let rt = class extends w {
       ${e.min_brightness <= 0 ? a`<p class="warn">
             At 0% lights following the sun can turn off at night, and Sundial
             won't turn them back on automatically.
-          </p>` : d}
+          </p>` : c}
       ${_("Color temperature")}
       ${nt(
       "Range",
@@ -2010,7 +1971,7 @@ let rt = class extends w {
       T,
       50,
       (t, i) => this._patch({ min_color_temp: t, max_color_temp: i }),
-      ut(L, T)
+      pt(L, T)
     )}
       ${_(
       "Sunrise & sunset",
@@ -2077,18 +2038,18 @@ let rt = class extends w {
   }
 };
 rt.styles = j;
-Qt([
-  u({ attribute: !1 })
+ee([
+  p({ attribute: !1 })
 ], rt.prototype, "sun", 2);
-rt = Qt([
+rt = ee([
   R("sundial-sun-config")
 ], rt);
-var Fe = Object.defineProperty, qe = Object.getOwnPropertyDescriptor, ct = (e, t, i, s) => {
-  for (var n = s > 1 ? void 0 : s ? qe(t, i) : t, r = e.length - 1, o; r >= 0; r--)
+var Ke = Object.defineProperty, Ze = Object.getOwnPropertyDescriptor, lt = (e, t, i, s) => {
+  for (var n = s > 1 ? void 0 : s ? Ze(t, i) : t, r = e.length - 1, o; r >= 0; r--)
     (o = e[r]) && (n = (s ? o(t, i, n) : o(n)) || n);
-  return s && n && Fe(t, i, n), n;
+  return s && n && Ke(t, i, n), n;
 };
-let N = class extends w {
+let z = class extends w {
   /** Run an API mutation and bubble the resulting config (or error) up. */
   async run(e) {
     try {
@@ -2138,7 +2099,7 @@ let N = class extends w {
     return a`
       ${_("Adaptation")}
       <div class="grid">
-        ${q(
+        ${F(
       "Interval",
       e.interval,
       10,
@@ -2147,7 +2108,7 @@ let N = class extends w {
       " s",
       (i) => t({ interval: i })
     )}
-        ${q(
+        ${F(
       "Transition",
       e.transition,
       0,
@@ -2156,7 +2117,7 @@ let N = class extends w {
       " s",
       (i) => t({ transition: i })
     )}
-        ${q(
+        ${F(
       "Turn-on transition",
       e.initial_transition,
       0,
@@ -2171,7 +2132,7 @@ let N = class extends w {
       "When a light is changed by hand, Sundial pauses for it. Auto-reset hands control back after this many seconds (0 = never)."
     )}
       <div class="actions">
-        ${Yt(
+        ${te(
       "Pause when controlled manually",
       e.take_over_control,
       (i) => t({ take_over_control: i })
@@ -2192,7 +2153,7 @@ let N = class extends w {
       "Gap between the two turn-on calls for lights that get brightness and colour sent separately (e.g. IKEA)."
     )}
       <div class="grid">
-        ${De(
+        ${ze(
       "Split-command delay (ms)",
       e.send_split_delay,
       (i) => t({ send_split_delay: i })
@@ -2203,13 +2164,13 @@ let N = class extends w {
       "Coordinates used to calculate sunrise and sunset. Leave blank to use your home's location."
     )}
       <div class="pair">
-        ${Nt(
+        ${zt(
       "Latitude",
       e.sun_latitude,
       this.config.home_latitude.toFixed(4),
       (i) => t({ sun_latitude: i })
     )}
-        ${Nt(
+        ${zt(
       "Longitude",
       e.sun_longitude,
       this.config.home_longitude.toFixed(4),
@@ -2238,9 +2199,9 @@ let N = class extends w {
     `;
   }
 };
-N.styles = [
+z.styles = [
   j,
-  M`
+  A`
       .about {
         margin: 28px 0 2px;
         text-align: center;
@@ -2250,29 +2211,29 @@ N.styles = [
       }
     `
 ];
-ct([
-  u({ attribute: !1 })
-], N.prototype, "config", 2);
-ct([
-  u({ attribute: !1 })
-], N.prototype, "api", 2);
-ct([
-  Ae("input[type=file]")
-], N.prototype, "_fileInput", 2);
-N = ct([
+lt([
+  p({ attribute: !1 })
+], z.prototype, "config", 2);
+lt([
+  p({ attribute: !1 })
+], z.prototype, "api", 2);
+lt([
+  Ce("input[type=file]")
+], z.prototype, "_fileInput", 2);
+z = lt([
   R("sundial-settings-tab")
-], N);
-var Ke = Object.defineProperty, Ze = Object.getOwnPropertyDescriptor, U = (e, t, i, s) => {
-  for (var n = s > 1 ? void 0 : s ? Ze(t, i) : t, r = e.length - 1, o; r >= 0; r--)
+], z);
+var Ge = Object.defineProperty, We = Object.getOwnPropertyDescriptor, U = (e, t, i, s) => {
+  for (var n = s > 1 ? void 0 : s ? We(t, i) : t, r = e.length - 1, o; r >= 0; r--)
     (o = e[r]) && (n = (s ? o(t, i, n) : o(n)) || n);
-  return s && n && Ke(t, i, n), n;
+  return s && n && Ge(t, i, n), n;
 };
-const Ge = {
+const Je = {
   explicit_turn_on: "Adjusted manually",
   diverged: "Adjusted somewhere else",
   turned_on_while_scheduled_off: "Switched on outside its schedule",
   service: "Set to manual by an automation"
-}, We = {
+}, Xe = {
   applied: "Updated because of schedule",
   turned_off: "Turned off because of schedule",
   skipped_disabled: "Idle — Sundial is disabled",
@@ -2283,7 +2244,7 @@ const Ge = {
 };
 function Q(e, t) {
   if (!e) return "—";
-  const i = Math.round((new Date(e).getTime() - t) / 1e3), s = Math.abs(i), n = s < 60 ? `${s}s` : Wt(s);
+  const i = Math.round((new Date(e).getTime() - t) / 1e3), s = Math.abs(i), n = s < 60 ? `${s}s` : Xt(s);
   return s < 5 ? "just now" : i < 0 ? `${n} ago` : `in ${n}`;
 }
 function Vt(e) {
@@ -2292,14 +2253,14 @@ function Vt(e) {
     minute: "2-digit"
   }) : "—";
 }
-function pt(e) {
+function ht(e) {
   if (!e) return "—";
   const t = [];
   if (e.brightness_pct !== null && t.push(`${e.brightness_pct}%`), e.color_temp_kelvin !== null && t.push(`${e.color_temp_kelvin} K`), e.rgb_color && t.push(`rgb(${e.rgb_color.join(", ")})`), !t.length) return "—";
-  const i = e.rgb_color ? Jt(e.rgb_color) : e.color_temp_kelvin !== null ? lt(e.color_temp_kelvin) : null;
-  return a`${i ? a`<i class="chip" style="background:${i}"></i>` : d}${t.join(" · ")}`;
+  const i = e.rgb_color ? Yt(e.rgb_color) : e.color_temp_kelvin !== null ? wt(e.color_temp_kelvin) : null;
+  return a`${i ? a`<i class="chip" style="background:${i}"></i>` : c}${t.join(" · ")}`;
 }
-let C = class extends w {
+let M = class extends w {
   constructor() {
     super(...arguments), this.status = null, this.entityId = null, this.open = !1, this._busy = !1, this._onToggle = (e) => {
       const t = e.target.open;
@@ -2318,7 +2279,7 @@ let C = class extends w {
       ?open=${this.open}
       @toggle=${this._onToggle}
     >
-      <summary>Status ${Ie}</summary>
+      <summary>Status ${Ne}</summary>
       ${this.status ? this.entityId ? this._renderLight(this.entityId) : this._renderSun() : a`<p class="muted sub">Loading…</p>`}
     </details>`;
   }
@@ -2343,32 +2304,32 @@ let C = class extends w {
         ${i.manual_control ? a`
               ${this._row(
       "Reason",
-      i.manual_reason ? Ge[i.manual_reason] : "unknown"
+      i.manual_reason ? Je[i.manual_reason] : "unknown"
     )}
               ${i.auto_reset_at ? this._row(
       "Back to automatic",
       Q(i.auto_reset_at, s)
-    ) : d}
-            ` : d}
-        ${this._row("Target", pt(i.target))}
+    ) : c}
+            ` : c}
+        ${this._row("Target", ht(i.target))}
         ${this._row(
       "Reports",
-      n ? pt(i.reported) : i.state ?? "not found"
+      n ? ht(i.reported) : i.state ?? "not found"
     )}
         ${this._row(
       "Last run",
-      i.last_outcome ? `${We[i.last_outcome]} · ${Q(i.last_evaluated_at, s)}` : "—"
+      i.last_outcome ? `${Xe[i.last_outcome]} · ${Q(i.last_evaluated_at, s)}` : "—"
     )}
         ${this._row("Next run", Q(t.global.next_pass_at, s))}
         ${i.group.kind === "group" ? this._row(
       "Group",
       `${i.group.members} lights · ${i.group.members_on} on`
-    ) : d}
+    ) : c}
       </div>
       ${i.group.kind === "group" ? a`<p class="warn">
             Light groups can misbehave. Adding the individual lights is
             recommended.
-          </p>` : d}
+          </p>` : c}
       ${i.manual_control ? a`<div class="actions">
             <button
               class="btn ghost small"
@@ -2377,7 +2338,7 @@ let C = class extends w {
             >
               Return to automatic
             </button>
-          </div>` : d}
+          </div>` : c}
     `;
   }
   _renderSun() {
@@ -2394,7 +2355,7 @@ let C = class extends w {
       "Sun",
       `${t.is_day ? "day" : "night"} · up ${Vt(t.nearest_sunrise)} · down ${Vt(t.nearest_sunset)}`
     )}
-        ${this._row("Sun now", pt(t.values))}
+        ${this._row("Sun now", ht(t.values))}
         ${this._row(
       "Next run",
       `${Q(i.next_pass_at, s)}${i.pass_running ? " · running" : ""}`
@@ -2422,9 +2383,9 @@ let C = class extends w {
     }
   }
 };
-C.styles = [
+M.styles = [
   j,
-  M`
+  A`
       /* The chevron points down when collapsed, up when expanded. baseStyles
          already sizes and tints summary svg. */
       details.section summary svg {
@@ -2499,32 +2460,32 @@ C.styles = [
     `
 ];
 U([
-  u({ attribute: !1 })
-], C.prototype, "status", 2);
+  p({ attribute: !1 })
+], M.prototype, "status", 2);
 U([
-  u({ attribute: !1 })
-], C.prototype, "entityId", 2);
+  p({ attribute: !1 })
+], M.prototype, "entityId", 2);
 U([
-  u({ attribute: !1 })
-], C.prototype, "api", 2);
+  p({ attribute: !1 })
+], M.prototype, "api", 2);
 U([
-  u({ type: Boolean })
-], C.prototype, "open", 2);
+  p({ type: Boolean })
+], M.prototype, "open", 2);
 U([
   b()
-], C.prototype, "_busy", 2);
-C = U([
+], M.prototype, "_busy", 2);
+M = U([
   R("sundial-status-section")
-], C);
-var Je = Object.defineProperty, Xe = Object.getOwnPropertyDescriptor, v = (e, t, i, s) => {
-  for (var n = s > 1 ? void 0 : s ? Xe(t, i) : t, r = e.length - 1, o; r >= 0; r--)
+], M);
+var Ye = Object.defineProperty, Qe = Object.getOwnPropertyDescriptor, v = (e, t, i, s) => {
+  for (var n = s > 1 ? void 0 : s ? Qe(t, i) : t, r = e.length - 1, o; r >= 0; r--)
     (o = e[r]) && (n = (s ? o(t, i, n) : o(n)) || n);
-  return s && n && Je(t, i, n), n;
+  return s && n && Ye(t, i, n), n;
 };
-const Ye = "(max-width: 960px)";
+const ti = "(max-width: 960px)";
 let f = class extends w {
   constructor() {
-    super(...arguments), this.preview = !1, this._sel = null, this._previewHour = gt(), this._isMobile = !1, this._status = null, this._statusOpen = !1, this._onMqChange = (e) => {
+    super(...arguments), this.preview = !1, this._sel = null, this._previewHour = ut(), this._isMobile = !1, this._status = null, this._statusOpen = !1, this._onMqChange = (e) => {
       this._isMobile = e.matches;
     }, this._closeDrawer = () => {
       const e = this.renderRoot.querySelector("dialog.drawer");
@@ -2556,10 +2517,10 @@ let f = class extends w {
     return this.schema.id === this.config.active_schema_id;
   }
   connectedCallback() {
-    super.connectedCallback(), this._mql = window.matchMedia(Ye), this._isMobile = this._mql.matches, this._mql.addEventListener("change", this._onMqChange);
+    super.connectedCallback(), this._mql = window.matchMedia(ti), this._isMobile = this._mql.matches, this._mql.addEventListener("change", this._onMqChange);
   }
   willUpdate(e) {
-    e.has("schema") && (this._draft?.id !== this.schema.id ? (this._flushSave(), this._draft = structuredClone(this.schema), this._sel = null, this._loadTimeline()) : this._saveTimer === void 0 && JSON.stringify(this.schema) !== JSON.stringify(this._draft) && (this._draft = structuredClone(this.schema), this._loadTimeline())), e.has("preview") && e.get("preview") !== void 0 && (this.preview ? this._sendPreview() : (this._previewHour = gt(), this.api.apply()));
+    e.has("schema") && (this._draft?.id !== this.schema.id ? (this._flushSave(), this._draft = structuredClone(this.schema), this._sel = null, this._loadTimeline()) : this._saveTimer === void 0 && JSON.stringify(this.schema) !== JSON.stringify(this._draft) && (this._draft = structuredClone(this.schema), this._loadTimeline())), e.has("preview") && e.get("preview") !== void 0 && (this.preview ? this._sendPreview() : (this._previewHour = ut(), this.api.apply()));
   }
   disconnectedCallback() {
     this._flushSave(), window.clearTimeout(this._previewTimer), window.clearTimeout(this._timelineTimer), this._stopStatusPolling(), this._mql?.removeEventListener("change", this._onMqChange), super.disconnectedCallback();
@@ -2634,13 +2595,13 @@ let f = class extends w {
   _lightCfg(e) {
     const t = this._draft.lights[e];
     if (t) return t;
-    const i = Ee(), s = this._bulbCtRange(e);
+    const i = Te(), s = this._bulbCtRange(e);
     return s && (i.min_color_temp = s[0], i.max_color_temp = s[1]), i;
   }
   /** The bulb's supported colour-temperature range, normalised to the
    *  editor's 50 K slider grid and bounds; null when unknown/RGB-only. */
   _bulbCtRange(e) {
-    const t = this.config.lights.find((s) => s.entity_id === e);
+    const t = this._lightInfo(e);
     if (t?.min_color_temp_kelvin == null || t?.max_color_temp_kelvin == null)
       return null;
     const i = (s) => Math.min(T, Math.max(L, Math.round(s / 50) * 50));
@@ -2694,9 +2655,9 @@ let f = class extends w {
           title="Rename schema"
           @click=${this._rename}
         >
-          ${Re}
+          ${Ie}
         </button>
-        ${this._isMobile ? d : this._renderSchemaActions()}
+        ${this._isMobile ? c : this._renderSchemaActions()}
         <span class="grow"></span>
         ${this._renderActions()}
       </div>
@@ -2719,10 +2680,10 @@ let f = class extends w {
           ></sundial-timeline-grid>
         </div>
 
-        ${this._isMobile ? d : this._renderSide()}
+        ${this._isMobile ? c : this._renderSide()}
       </div>
 
-      ${this._isMobile && this._sel ? this._renderDrawer() : d}
+      ${this._isMobile && this._sel ? this._renderDrawer() : c}
     `;
   }
   // A fixed set of controls in a fixed order — unavailable ones are disabled
@@ -2765,7 +2726,7 @@ let f = class extends w {
         title="Global settings"
         @click=${() => this._sel = { kind: "settings" }}
       >
-        ${zt}
+        ${Nt}
       </button>
     ` : a`
         <button
@@ -2787,7 +2748,7 @@ let f = class extends w {
           title="Global settings"
           @click=${() => this._sel = { kind: "settings" }}
         >
-          ${zt} Settings
+          ${Nt} Settings
         </button>
       `;
   }
@@ -2813,7 +2774,7 @@ let f = class extends w {
     if (!this._sel)
       return a`<div class="side">
         <div class="side-placeholder">
-          ${Oe}
+          ${He}
           <span>Select a light to configure it</span>
         </div>
       </div>`;
@@ -2823,8 +2784,8 @@ let f = class extends w {
         ✕
       </button>
       <h2>${this._contextTitle()}</h2>
-      ${e ? a`<p class="subtitle">${e}</p>` : d}
-      ${this._renderContextBody()}
+      ${e ? a`<p class="subtitle">${e}</p>` : c}
+      <div class="side-body">${this._renderContextBody()}</div>
     </div>`;
   }
   _renderDrawer() {
@@ -2838,7 +2799,7 @@ let f = class extends w {
       <div class="drawer-head">
         <div class="drawer-titles">
           <h2>${this._contextTitle()}</h2>
-          ${e ? a`<span class="area">${e}</span>` : d}
+          ${e ? a`<span class="area">${e}</span>` : c}
         </div>
         <button class="close" title="Close" @click=${this._closeDrawer}>✕</button>
       </div>
@@ -2868,7 +2829,7 @@ let f = class extends w {
   /** The room (area) of the selected light, for the header subtitle. */
   _contextSubtitle() {
     const e = this._sel, t = e?.kind === "light" ? e.entityId : e?.kind === "cell" ? e.ref.entityId : null;
-    return t ? this.config.lights.find((i) => i.entity_id === t)?.area_name ?? null : null;
+    return t ? this._lightInfo(t)?.area_name ?? null : null;
   }
   _renderContextBody() {
     const e = this._sel;
@@ -2889,7 +2850,7 @@ let f = class extends w {
   }
   // The edited row's 24 cells, mirrored live above the editor.
   _renderRowPreview(e, t) {
-    if (!e?.length) return d;
+    if (!e?.length) return c;
     const i = t !== void 0 && !et(this._lightInfo(t));
     return a`<sundial-row-preview
       .cells=${e}
@@ -2897,41 +2858,41 @@ let f = class extends w {
     ></sundial-row-preview>`;
   }
   _renderCellEditor(e) {
-    const t = this.config.lights.find((l) => l.entity_id === e.entityId), i = this._lightCfg(e.entityId).hours[e.hour], s = this._timeline?.lights[e.entityId]?.[e.hour], n = i?.brightness ?? s?.brightness ?? 50, r = i?.color_temp ?? s?.color_temp ?? 3e3, o = i?.rgb_color ?? null, c = (l) => this._setCell(e, {
+    const t = this._lightInfo(e.entityId), i = this._lightCfg(e.entityId).hours[e.hour], s = this._timeline?.lights[e.entityId]?.[e.hour], n = i?.brightness ?? s?.brightness ?? 50, r = i?.color_temp ?? s?.color_temp ?? 3e3, o = i?.rgb_color ?? null, d = (l) => this._setCell(e, {
       brightness: n,
       color_temp: r,
       rgb_color: o,
       ...l
     });
     return i ? a`
-      ${q(
+      ${F(
       "Brightness",
       n,
       0,
       100,
       1,
       "%",
-      (l) => c({ brightness: l })
+      (l) => d({ brightness: l })
     )}
       ${n <= 0 ? a`<p class="warn">
             At 0% this light turns off at this hour, and Sundial won't turn it
             back on automatically.
-          </p>` : d}
-      ${et(t) ? q(
+          </p>` : c}
+      ${et(t) ? F(
       "Color temp",
       r,
       L,
       T,
       50,
       "K",
-      (l) => c({ color_temp: l }),
-      ut(L, T)
-    ) : d}
+      (l) => d({ color_temp: l }),
+      pt(L, T)
+    ) : c}
       ${t?.supports_rgb ? a`<label class="toggle">
               <input
                 type="checkbox"
                 .checked=${o !== null}
-                @change=${(l) => c({
+                @change=${(l) => d({
       rgb_color: l.target.checked ? o ?? [255, 255, 255] : null
     })}
               />
@@ -2939,11 +2900,11 @@ let f = class extends w {
             </label>
             ${o !== null ? a`<input
                   type="color"
-                  .value=${Jt(o)}
-                  @input=${(l) => c({
-      rgb_color: Pe(l.target.value)
+                  .value=${Yt(o)}
+                  @input=${(l) => d({
+      rgb_color: Re(l.target.value)
     })}
-                />` : d}` : d}
+                />` : c}` : c}
       <div class="center-cta">
         <button class="btn ghost" @click=${() => this._setCell(e, null)}>
           Use sun
@@ -2955,14 +2916,14 @@ let f = class extends w {
           Following the sun
         </div>
         <div class="center-cta">
-          <button class="btn" @click=${() => c({})}>Override</button>
+          <button class="btn" @click=${() => d({})}>Override</button>
         </div>
       `;
   }
   /** A one-tap reset when the configured range deviates from the bulb's. */
   _renderBulbRangeReset(e, t) {
     const i = this._bulbCtRange(e);
-    return !i || t.min_color_temp === i[0] && t.max_color_temp === i[1] ? d : a`<div class="actions">
+    return !i || t.min_color_temp === i[0] && t.max_color_temp === i[1] ? c : a`<div class="actions">
       <button
         class="btn ghost small"
         title="Set the bounds to ${i[0]}–${i[1]} K"
@@ -2977,8 +2938,8 @@ let f = class extends w {
   }
   /** Colour-rendering choice, only for lights supporting both CT and RGB. */
   _renderRenderModeSelect(e, t) {
-    const i = this.config.lights.find((s) => s.entity_id === e);
-    return !i?.supports_rgb || i.min_color_temp_kelvin == null ? d : Ut(
+    const i = this._lightInfo(e);
+    return !i?.supports_rgb || i.min_color_temp_kelvin == null ? c : Ut(
       "Rendering",
       t.render_mode,
       [
@@ -3005,7 +2966,7 @@ let f = class extends w {
       ${t.min_brightness <= 0 ? a`<p class="warn">
             At 0% this light can turn off during the day, and Sundial won't
             turn it back on automatically.
-          </p>` : d}
+          </p>` : c}
       ${et(this._lightInfo(e)) ? a`${_("Color temperature")}
           ${nt(
       "Range",
@@ -3019,9 +2980,9 @@ let f = class extends w {
         min_color_temp: i,
         max_color_temp: s
       }),
-      ut(L, T)
+      pt(L, T)
     )}
-          ${this._renderBulbRangeReset(e, t)}` : d}
+          ${this._renderBulbRangeReset(e, t)}` : c}
       ${_(
       "Behaviour",
       "Cap keeps the light tracking the sun, clamped into its range; Scale sweeps the whole range across the day. Sending brightness and colour separately helps lights that drop combined commands (e.g. IKEA)."
@@ -3037,7 +2998,7 @@ let f = class extends w {
     )}
       ${this._renderRenderModeSelect(e, t)}
       <div class="actions">
-        ${Yt(
+        ${te(
       "Send brightness and colour separately",
       t.separate_turn_on_commands,
       (i) => this._patchLight(e, { separate_turn_on_commands: i })
@@ -3066,8 +3027,15 @@ let f = class extends w {
 };
 f.styles = [
   j,
-  M`
+  A`
+      :host {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+      }
       .head {
+        flex: none;
         display: flex;
         align-items: center;
         gap: 10px;
@@ -3109,9 +3077,6 @@ f.styles = [
         width: 100%;
         opacity: 0;
         cursor: pointer;
-      }
-      .grow {
-        flex: 1;
       }
       input[type="color"] {
         width: 52px;
@@ -3162,16 +3127,20 @@ f.styles = [
         opacity: 0.9;
       }
       .layout {
+        flex: 1;
+        min-height: 0;
         display: grid;
         grid-template-columns: minmax(0, 1fr) 340px;
+        grid-template-rows: minmax(0, 1fr);
         gap: 16px;
         align-items: stretch;
       }
-      /* Let both columns shrink below their content so the timeline scrolls
-         internally instead of overflowing the viewport. */
+      /* Let both columns shrink below their content so each scrolls
+         internally instead of growing the page. */
       .main,
       .side {
         min-width: 0;
+        min-height: 0;
       }
       /* The side holds global settings flat by default; when something is
          selected it becomes a temporary editing card. */
@@ -3181,6 +3150,7 @@ f.styles = [
         display: flex;
         flex-direction: column;
         gap: 10px;
+        overflow: hidden;
       }
       .side.editing {
         background: var(--surface);
@@ -3188,6 +3158,13 @@ f.styles = [
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         padding: 18px;
+      }
+      /* The title row stays put; only the form below it scrolls. */
+      .side-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
       .side h2 {
         margin: 0 0 4px;
@@ -3356,15 +3333,8 @@ f.styles = [
       }
 
       @media (max-width: 960px) {
-        :host {
-          display: flex;
-          flex-direction: column;
-          height: 100%;
-          min-height: 0;
-        }
         /* Fixed-height single-row sticky bar on a soft surface. */
         .head {
-          flex: none;
           position: sticky;
           top: 0;
           z-index: 20;
@@ -3381,29 +3351,23 @@ f.styles = [
           font-size: 1.05rem;
         }
         .layout {
-          flex: 1;
-          min-height: 0;
           grid-template-columns: minmax(0, 1fr);
-          grid-template-rows: minmax(0, 1fr);
           gap: 0;
-        }
-        .main {
-          min-height: 0;
         }
       }
     `
 ];
 v([
-  u({ attribute: !1 })
+  p({ attribute: !1 })
 ], f.prototype, "schema", 2);
 v([
-  u({ attribute: !1 })
+  p({ attribute: !1 })
 ], f.prototype, "config", 2);
 v([
-  u({ attribute: !1 })
+  p({ attribute: !1 })
 ], f.prototype, "api", 2);
 v([
-  u({ type: Boolean })
+  p({ type: Boolean })
 ], f.prototype, "preview", 2);
 v([
   b()
@@ -3429,10 +3393,10 @@ v([
 f = v([
   R("sundial-schema-editor")
 ], f);
-var Qe = Object.defineProperty, ti = Object.getOwnPropertyDescriptor, H = (e, t, i, s) => {
-  for (var n = s > 1 ? void 0 : s ? ti(t, i) : t, r = e.length - 1, o; r >= 0; r--)
+var ei = Object.defineProperty, ii = Object.getOwnPropertyDescriptor, H = (e, t, i, s) => {
+  for (var n = s > 1 ? void 0 : s ? ii(t, i) : t, r = e.length - 1, o; r >= 0; r--)
     (o = e[r]) && (n = (s ? o(t, i, n) : o(n)) || n);
-  return s && n && Qe(t, i, n), n;
+  return s && n && ei(t, i, n), n;
 };
 let y = class extends w {
   constructor() {
@@ -3453,14 +3417,7 @@ let y = class extends w {
     this.toggleAttribute("dark", e);
   }
   updated() {
-    this._syncTheme(), this.hass && (this._api ? this._api.setHass(this.hass) : this._api = new Se(this.hass), this._loaded || (this._loaded = !0, this._load()));
-  }
-  async _load() {
-    try {
-      this._config = await this._api.getConfig(), this._error = void 0;
-    } catch (e) {
-      this._error = String(e);
-    }
+    this._syncTheme(), this.hass && (this._api ? this._api.setHass(this.hass) : this._api = new Me(this.hass), this._loaded || (this._loaded = !0, this._run(this._api.getConfig())));
   }
   get _currentId() {
     const e = this._config;
@@ -3486,7 +3443,7 @@ let y = class extends w {
       @schema-select=${(s) => this._selectedId = s.detail}
       @schema-new=${() => void this._new()}
     >
-      ${this._error ? a`<div class="card error">${this._error}</div>` : d}
+      ${this._error ? a`<div class="card error">${this._error}</div>` : c}
 
       ${i ? a`<sundial-schema-editor
             .schema=${i}
@@ -3494,12 +3451,12 @@ let y = class extends w {
             .api=${this._api}
             .preview=${this._preview}
             @schema-delete=${this._onDelete}
-          ></sundial-schema-editor>` : d}
+          ></sundial-schema-editor>` : c}
     </div>`;
   }
   async _new() {
     const e = `schema_${Date.now().toString(36)}`;
-    this._selectedId = e, await this._run(this._api.saveSchema(Le(e, "New schema")));
+    this._selectedId = e, await this._run(this._api.saveSchema(Pe(e, "New schema")));
   }
   async _onDelete(e) {
     this._selectedId = void 0, await this._run(this._api.deleteSchema(e.detail));
@@ -3513,61 +3470,67 @@ let y = class extends w {
   }
 };
 y.styles = [
-  Ce,
+  Ee,
   j,
-  M`
+  A`
+      /* The panel is exactly as tall as the viewport; everything inside it
+         scrolls in its own column rather than scrolling the page. */
+      :host {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+      }
       .wrap {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
         width: 100%;
-        padding: 18px 20px 64px;
+        padding: 18px 20px;
         overflow-x: clip;
+      }
+      .wrap > .card {
+        flex: none;
+      }
+      sundial-schema-editor {
+        flex: 1 1 auto;
+        min-height: 0;
       }
       .error {
         border-color: var(--danger);
         color: var(--danger);
       }
       @media (max-width: 960px) {
-        /* Pin the whole panel to the viewport on small screens: with the
-           host fixed, no drag anywhere can scroll the page — the timeline
-           scrolls internally and that's it. The explicit height matters:
-           inside Home Assistant an ancestor with transform/contain can
-           become the fixed-position containing block, and inset alone would
-           then size the panel to that (possibly short) ancestor instead of
-           the screen. */
+        /* Additionally pin the host on small screens, so no drag anywhere
+           can rubber-band the page. The explicit height matters: inside Home
+           Assistant an ancestor with transform/contain can become the
+           fixed-position containing block, and inset alone would then size
+           the panel to that (possibly short) ancestor instead of the
+           screen. */
         :host {
           position: fixed;
           inset: 0;
-          height: 100vh;
-          height: 100dvh;
-          min-height: 0;
-          overflow: hidden;
           overscroll-behavior: none;
         }
         /* Edge to edge: the timeline's scroll indicator should sit at the
            screen edge, so the gutter lives on the inner content instead. */
         .wrap {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
           padding: 0;
-          overflow: hidden;
           overscroll-behavior: none;
         }
         .wrap > .card {
-          flex: none;
           margin: 8px 12px 0;
-        }
-        sundial-schema-editor {
-          flex: 1 1 auto;
-          min-height: 0;
         }
       }
     `
 ];
 H([
-  u({ attribute: !1 })
+  p({ attribute: !1 })
 ], y.prototype, "hass", 2);
 H([
-  u({ attribute: !1 })
+  p({ attribute: !1 })
 ], y.prototype, "narrow", 2);
 H([
   b()

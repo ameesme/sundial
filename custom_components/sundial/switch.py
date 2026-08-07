@@ -14,8 +14,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, PANEL_TITLE, SIGNAL_CONFIG_UPDATED
-from .coordinator import SundialCoordinator
+from .const import DOMAIN, SIGNAL_CONFIG_UPDATED
+from .coordinator import SundialCoordinator, device_info
 
 
 async def async_setup_entry(
@@ -42,12 +42,7 @@ class SundialMasterSwitch(SwitchEntity, RestoreEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._entry.entry_id)},
-            name=PANEL_TITLE,
-            manufacturer="Sundial",
-            entry_type=None,
-        )
+        return device_info(self._entry)
 
     @property
     def unique_id(self) -> str:

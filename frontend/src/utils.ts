@@ -76,6 +76,18 @@ export function kelvinToCss(kelvin: number): string {
   return `rgb(${clamp(r)}, ${clamp(g)}, ${clamp(b)})`;
 }
 
+// Fill colour for one chart cell: an explicit RGB wins, otherwise the hour's
+// warmth — flattened to the accent for a light that can't render colour, so
+// the row doesn't imply a warmth curve the bulb can't produce.
+export function cellColor(
+  cell: { color_temp: number; rgb_color?: [number, number, number] | null },
+  colorless: boolean
+): string {
+  if (colorless) return "var(--accent-light)";
+  const rgb = cell.rgb_color;
+  return rgb ? `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})` : kelvinToCss(cell.color_temp);
+}
+
 // CSS gradient sweeping a Kelvin range, for slider indication strips.
 export function kelvinGradientCss(minK: number, maxK: number): string {
   const steps = 10;

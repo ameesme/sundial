@@ -14,8 +14,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, PANEL_TITLE, SIGNAL_CONFIG_UPDATED
-from .coordinator import SundialCoordinator
+from .const import DOMAIN, SIGNAL_CONFIG_UPDATED
+from .coordinator import SundialCoordinator, device_info
 
 
 async def async_setup_entry(
@@ -46,12 +46,7 @@ class SundialSchemaSelect(SelectEntity):
 
     @property
     def device_info(self) -> DeviceInfo:
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._entry.entry_id)},
-            name=PANEL_TITLE,
-            manufacturer="Sundial",
-            entry_type=None,
-        )
+        return device_info(self._entry)
 
     @property
     def options(self) -> list[str]:

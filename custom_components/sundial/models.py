@@ -19,7 +19,7 @@ Model shape (schemas contain lights, not the other way around):
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, fields
+from dataclasses import asdict, dataclass, field, fields
 from typing import Any
 
 from .const import (
@@ -122,7 +122,7 @@ class SunConfig:
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return {f.name: getattr(self, f.name) for f in fields(self)}
+        return asdict(self)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> SunConfig:
@@ -164,7 +164,7 @@ class LightConfig:
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return {f.name: getattr(self, f.name) for f in fields(self)}
+        return asdict(self)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> LightConfig:
@@ -185,12 +185,7 @@ class Schema:
         return self.lights.get(entity_id) or LightConfig()
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "id": self.id,
-            "name": self.name,
-            "sun": self.sun.to_dict(),
-            "lights": {eid: cfg.to_dict() for eid, cfg in self.lights.items()},
-        }
+        return asdict(self)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Schema:
@@ -221,7 +216,7 @@ class GlobalSettings:
     sun_longitude: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        return {f.name: getattr(self, f.name) for f in fields(self)}
+        return asdict(self)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> GlobalSettings:
@@ -259,11 +254,7 @@ class StoreData:
         ]
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "settings": self.settings.to_dict(),
-            "schemas": {sid: s.to_dict() for sid, s in self.schemas.items()},
-            "active_schema_id": self.active_schema_id,
-        }
+        return asdict(self)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> StoreData:

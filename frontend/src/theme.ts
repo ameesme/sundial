@@ -23,8 +23,6 @@ export const tokenStyles = css`
     --shadow: 0 2px 10px rgba(120, 80, 40, 0.12);
     color-scheme: light;
 
-    display: block;
-    min-height: 100vh;
     background: var(--bg);
     color: var(--text);
     /* Home Assistant's own typography (Roboto), themable via its token. */
@@ -101,16 +99,7 @@ export const baseStyles = css`
     border-radius: 6px;
   }
 
-  label.field {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--text-soft);
-  }
-
-  div.field {
+  .field {
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -457,5 +446,50 @@ export const baseStyles = css`
     text-align: center;
     color: var(--text-soft);
     padding: 28px;
+  }
+`;
+
+// The 24-cell brightness chart, shared by the timeline rows and the row
+// preview strip: dim reference lines at 100% and the baseline, an override
+// marker, and a fill that paints above both lines so 1px values stay visible.
+// Cell height is left to the host — the two differ.
+export const cellStyles = css`
+  .cells {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(24, minmax(0, 1fr));
+    gap: 1px;
+  }
+  .cells::before,
+  .cells::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--border);
+    opacity: 0.5;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .cells::before {
+    top: 0;
+  }
+  .cells::after {
+    bottom: 0;
+  }
+  .cell {
+    position: relative;
+    overflow: hidden;
+  }
+  .cell.explicit {
+    background: var(--border);
+  }
+  .cell .fill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
   }
 `;
