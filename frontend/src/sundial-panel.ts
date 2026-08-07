@@ -25,49 +25,55 @@ export class SundialPanel extends LitElement {
     tokenStyles,
     baseStyles,
     css`
+      /* The panel is exactly as tall as the viewport; everything inside it
+         scrolls in its own column rather than scrolling the page. */
+      :host {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+      }
       .wrap {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
         width: 100%;
-        padding: 18px 20px 64px;
+        padding: 18px 20px;
         overflow-x: clip;
+      }
+      .wrap > .card {
+        flex: none;
+      }
+      sundial-schema-editor {
+        flex: 1 1 auto;
+        min-height: 0;
       }
       .error {
         border-color: var(--danger);
         color: var(--danger);
       }
       @media (max-width: 960px) {
-        /* Pin the whole panel to the viewport on small screens: with the
-           host fixed, no drag anywhere can scroll the page — the timeline
-           scrolls internally and that's it. The explicit height matters:
-           inside Home Assistant an ancestor with transform/contain can
-           become the fixed-position containing block, and inset alone would
-           then size the panel to that (possibly short) ancestor instead of
-           the screen. */
+        /* Additionally pin the host on small screens, so no drag anywhere
+           can rubber-band the page. The explicit height matters: inside Home
+           Assistant an ancestor with transform/contain can become the
+           fixed-position containing block, and inset alone would then size
+           the panel to that (possibly short) ancestor instead of the
+           screen. */
         :host {
           position: fixed;
           inset: 0;
-          height: 100vh;
-          height: 100dvh;
-          min-height: 0;
-          overflow: hidden;
           overscroll-behavior: none;
         }
         /* Edge to edge: the timeline's scroll indicator should sit at the
            screen edge, so the gutter lives on the inner content instead. */
         .wrap {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
           padding: 0;
-          overflow: hidden;
           overscroll-behavior: none;
         }
         .wrap > .card {
-          flex: none;
           margin: 8px 12px 0;
-        }
-        sundial-schema-editor {
-          flex: 1 1 auto;
-          min-height: 0;
         }
       }
     `,

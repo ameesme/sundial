@@ -23,8 +23,6 @@ export const tokenStyles = css`
     --shadow: 0 2px 10px rgba(120, 80, 40, 0.12);
     color-scheme: light;
 
-    display: block;
-    min-height: 100vh;
     background: var(--bg);
     color: var(--text);
     /* Home Assistant's own typography (Roboto), themable via its token. */

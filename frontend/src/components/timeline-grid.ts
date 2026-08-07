@@ -35,9 +35,17 @@ export class TimelineGrid extends LitElement {
       }
       .card {
         box-sizing: border-box;
+        height: 100%;
+        margin-bottom: 0;
+        display: flex;
+        flex-direction: column;
       }
       .scroll {
+        flex: 1;
+        min-height: 0;
         max-width: 100%;
+        overflow-y: auto;
+        overscroll-behavior: contain;
         padding-bottom: 6px;
       }
       .rows {
@@ -73,6 +81,14 @@ export class TimelineGrid extends LitElement {
         display: grid;
         grid-template-columns: repeat(24, 1fr);
         gap: 1px;
+      }
+      /* Above the rows' playheads (z-index 4) so scrolling content always
+         passes underneath the hour numbers. */
+      .headrow {
+        position: sticky;
+        top: 0;
+        z-index: 6;
+        background: var(--surface);
       }
       .label {
         z-index: 3;
@@ -235,14 +251,9 @@ export class TimelineGrid extends LitElement {
         :host {
           min-height: 0;
         }
-        /* Fill the viewport to the very bottom; the grid fits the width (no
-           horizontal scrolling) and scrolls internally only vertically. */
+        /* Edge to edge: the grid fits the width (no horizontal scrolling). */
         .card {
           padding: 0;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          margin-bottom: 0;
         }
         .scrub-bar {
           display: block;
@@ -253,11 +264,7 @@ export class TimelineGrid extends LitElement {
           display: none;
         }
         .scroll {
-          flex: 1;
-          min-height: 0;
-          overflow-y: auto;
           overflow-x: hidden;
-          overscroll-behavior: contain;
           -webkit-overflow-scrolling: touch;
           /* The content scrolls clear of the iOS home indicator. */
           padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
@@ -304,18 +311,11 @@ export class TimelineGrid extends LitElement {
         .headrow {
           margin-bottom: 0;
           padding-bottom: 4px;
+          background: var(--bg);
         }
         .hourhead {
           font-size: 0.55rem;
           overflow: hidden;
-        }
-        /* Above the rows' playheads (z-index 4) so scrolling content always
-           passes underneath the hour numbers. */
-        .headrow {
-          position: sticky;
-          top: 0;
-          z-index: 6;
-          background: var(--bg);
         }
         /* Scrolls with the content as its last item. */
         .legend {

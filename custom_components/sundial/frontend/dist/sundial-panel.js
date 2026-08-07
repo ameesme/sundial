@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 const tt = globalThis, gt = tt.ShadowRoot && (tt.ShadyCSS === void 0 || tt.ShadyCSS.nativeShadow) && "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype, mt = Symbol(), xt = /* @__PURE__ */ new WeakMap();
-let Ft = class {
+let qt = class {
   constructor(t, i, s) {
     if (this._$cssResult$ = !0, s !== mt) throw Error("CSSResult is not constructable. Use `unsafeCSS` or `css` instead.");
     this.cssText = t, this.t = i;
@@ -22,13 +22,13 @@ let Ft = class {
     return this.cssText;
   }
 };
-const ie = (e) => new Ft(typeof e == "string" ? e : e + "", void 0, mt), A = (e, ...t) => {
+const ie = (e) => new qt(typeof e == "string" ? e : e + "", void 0, mt), A = (e, ...t) => {
   const i = e.length === 1 ? e[0] : t.reduce((s, n, r) => s + ((o) => {
     if (o._$cssResult$ === !0) return o.cssText;
     if (typeof o == "number") return o;
     throw Error("Value passed to 'css' function must be a 'css' function result: " + o + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
   })(n) + e[r + 1], e[0]);
-  return new Ft(i, e, mt);
+  return new qt(i, e, mt);
 }, se = (e, t) => {
   if (gt) e.adoptedStyleSheets = t.map((i) => i instanceof CSSStyleSheet ? i : i.styleSheet);
   else for (const i of t) {
@@ -45,7 +45,7 @@ const ie = (e) => new Ft(typeof e == "string" ? e : e + "", void 0, mt), A = (e,
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const { is: ne, defineProperty: re, getOwnPropertyDescriptor: oe, getOwnPropertyNames: ae, getOwnPropertySymbols: le, getPrototypeOf: ce } = Object, ot = globalThis, At = ot.trustedTypes, de = At ? At.emptyScript : "", he = ot.reactiveElementPolyfillSupport, F = (e, t) => e, it = { toAttribute(e, t) {
+const { is: ne, defineProperty: re, getOwnPropertyDescriptor: oe, getOwnPropertyNames: ae, getOwnPropertySymbols: le, getPrototypeOf: ce } = Object, ot = globalThis, At = ot.trustedTypes, de = At ? At.emptyScript : "", he = ot.reactiveElementPolyfillSupport, q = (e, t) => e, it = { toAttribute(e, t) {
   switch (t) {
     case Boolean:
       e = e ? de : null;
@@ -103,13 +103,13 @@ let I = class extends HTMLElement {
     return this.elementProperties.get(t) ?? kt;
   }
   static _$Ei() {
-    if (this.hasOwnProperty(F("elementProperties"))) return;
+    if (this.hasOwnProperty(q("elementProperties"))) return;
     const t = ce(this);
     t.finalize(), t.l !== void 0 && (this.l = [...t.l]), this.elementProperties = new Map(t.elementProperties);
   }
   static finalize() {
-    if (this.hasOwnProperty(F("finalized"))) return;
-    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(F("properties"))) {
+    if (this.hasOwnProperty(q("finalized"))) return;
+    if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(q("properties"))) {
       const i = this.properties, s = [...ae(i), ...le(i)];
       for (const n of s) this.createProperty(n, i[n]);
     }
@@ -256,13 +256,13 @@ let I = class extends HTMLElement {
   firstUpdated(t) {
   }
 };
-I.elementStyles = [], I.shadowRootOptions = { mode: "open" }, I[F("elementProperties")] = /* @__PURE__ */ new Map(), I[F("finalized")] = /* @__PURE__ */ new Map(), he?.({ ReactiveElement: I }), (ot.reactiveElementVersions ??= []).push("2.1.2");
+I.elementStyles = [], I.shadowRootOptions = { mode: "open" }, I[q("elementProperties")] = /* @__PURE__ */ new Map(), I[q("finalized")] = /* @__PURE__ */ new Map(), he?.({ ReactiveElement: I }), (ot.reactiveElementVersions ??= []).push("2.1.2");
 /**
  * @license
  * Copyright 2017 Google LLC
  * SPDX-License-Identifier: BSD-3-Clause
  */
-const _t = globalThis, St = (e) => e, st = _t.trustedTypes, Ct = st ? st.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, qt = "$lit$", C = `lit$${Math.random().toFixed(9).slice(2)}$`, Kt = "?" + C, pe = `<${Kt}>`, O = document, K = () => O.createComment(""), Z = (e) => e === null || typeof e != "object" && typeof e != "function", bt = Array.isArray, ue = (e) => bt(e) || typeof e?.[Symbol.iterator] == "function", ct = `[ 	
+const _t = globalThis, St = (e) => e, st = _t.trustedTypes, Ct = st ? st.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, Ft = "$lit$", C = `lit$${Math.random().toFixed(9).slice(2)}$`, Kt = "?" + C, pe = `<${Kt}>`, O = document, K = () => O.createComment(""), Z = (e) => e === null || typeof e != "object" && typeof e != "function", bt = Array.isArray, ue = (e) => bt(e) || typeof e?.[Symbol.iterator] == "function", ct = `[ 	
 \f\r]`, B = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, Mt = /-->/g, Et = />/g, E = RegExp(`>|${ct}(?:([^\\s"'>=/]+)(${ct}*=${ct}*(?:[^ 	
 \f\r"'\`<>=]|("|')|))|$)`, "g"), Lt = /'/g, Tt = /"/g, Zt = /^(?:script|style|textarea|title)$/i, ge = (e) => (t, ...i) => ({ _$litType$: e, strings: t, values: i }), a = ge(1), D = Symbol.for("lit-noChange"), c = Symbol.for("lit-nothing"), Pt = /* @__PURE__ */ new WeakMap(), P = O.createTreeWalker(O, 129);
 function Gt(e, t) {
@@ -277,7 +277,7 @@ const me = (e, t) => {
     let u, g, h = -1, m = 0;
     for (; m < l.length && (o.lastIndex = m, g = o.exec(l), g !== null); ) m = o.lastIndex, o === B ? g[1] === "!--" ? o = Mt : g[1] !== void 0 ? o = Et : g[2] !== void 0 ? (Zt.test(g[2]) && (n = RegExp("</" + g[2], "g")), o = E) : g[3] !== void 0 && (o = E) : o === E ? g[0] === ">" ? (o = n ?? B, h = -1) : g[1] === void 0 ? h = -2 : (h = o.lastIndex - g[2].length, u = g[1], o = g[3] === void 0 ? E : g[3] === '"' ? Tt : Lt) : o === Tt || o === Lt ? o = E : o === Mt || o === Et ? o = B : (o = E, n = void 0);
     const S = o === E && e[d + 1].startsWith("/>") ? " " : "";
-    r += o === B ? l + pe : h >= 0 ? (s.push(u), l.slice(0, h) + qt + l.slice(h) + C + S) : l + C + (h === -2 ? d : S);
+    r += o === B ? l + pe : h >= 0 ? (s.push(u), l.slice(0, h) + Ft + l.slice(h) + C + S) : l + C + (h === -2 ? d : S);
   }
   return [Gt(e, r + (e[i] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), s];
 };
@@ -293,7 +293,7 @@ class G {
     }
     for (; (n = P.nextNode()) !== null && l.length < d; ) {
       if (n.nodeType === 1) {
-        if (n.hasAttributes()) for (const h of n.getAttributeNames()) if (h.endsWith(qt)) {
+        if (n.hasAttributes()) for (const h of n.getAttributeNames()) if (h.endsWith(Ft)) {
           const m = g[o++], S = n.getAttribute(h).split(C), X = /([.?@])?(.*)/.exec(m);
           l.push({ type: 1, index: r, name: X[2], strings: S, ctor: X[1] === "." ? _e : X[1] === "?" ? be : X[1] === "@" ? ve : at }), n.removeAttribute(h);
         } else h.startsWith(C) && (l.push({ type: 6, index: r }), n.removeAttribute(h));
@@ -665,8 +665,6 @@ const Ee = A`
     --shadow: 0 2px 10px rgba(120, 80, 40, 0.12);
     color-scheme: light;
 
-    display: block;
-    min-height: 100vh;
     background: var(--bg);
     color: var(--text);
     /* Home Assistant's own typography (Roboto), themable via its token. */
@@ -1317,7 +1315,7 @@ function zt(e, t, i, s) {
     />
   </label>`;
 }
-function q(e, t, i, s, n, r, o, d) {
+function F(e, t, i, s, n, r, o, d) {
   return a`<label class="field">
     <span class="field-head">
       <span>${e}</span>
@@ -1572,9 +1570,17 @@ $.styles = [
       }
       .card {
         box-sizing: border-box;
+        height: 100%;
+        margin-bottom: 0;
+        display: flex;
+        flex-direction: column;
       }
       .scroll {
+        flex: 1;
+        min-height: 0;
         max-width: 100%;
+        overflow-y: auto;
+        overscroll-behavior: contain;
         padding-bottom: 6px;
       }
       .rows {
@@ -1610,6 +1616,14 @@ $.styles = [
         display: grid;
         grid-template-columns: repeat(24, 1fr);
         gap: 1px;
+      }
+      /* Above the rows' playheads (z-index 4) so scrolling content always
+         passes underneath the hour numbers. */
+      .headrow {
+        position: sticky;
+        top: 0;
+        z-index: 6;
+        background: var(--surface);
       }
       .label {
         z-index: 3;
@@ -1772,14 +1786,9 @@ $.styles = [
         :host {
           min-height: 0;
         }
-        /* Fill the viewport to the very bottom; the grid fits the width (no
-           horizontal scrolling) and scrolls internally only vertically. */
+        /* Edge to edge: the grid fits the width (no horizontal scrolling). */
         .card {
           padding: 0;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          margin-bottom: 0;
         }
         .scrub-bar {
           display: block;
@@ -1790,11 +1799,7 @@ $.styles = [
           display: none;
         }
         .scroll {
-          flex: 1;
-          min-height: 0;
-          overflow-y: auto;
           overflow-x: hidden;
-          overscroll-behavior: contain;
           -webkit-overflow-scrolling: touch;
           /* The content scrolls clear of the iOS home indicator. */
           padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
@@ -1841,18 +1846,11 @@ $.styles = [
         .headrow {
           margin-bottom: 0;
           padding-bottom: 4px;
+          background: var(--bg);
         }
         .hourhead {
           font-size: 0.55rem;
           overflow: hidden;
-        }
-        /* Above the rows' playheads (z-index 4) so scrolling content always
-           passes underneath the hour numbers. */
-        .headrow {
-          position: sticky;
-          top: 0;
-          z-index: 6;
-          background: var(--bg);
         }
         /* Scrolls with the content as its last item. */
         .legend {
@@ -1934,10 +1932,10 @@ $t([
 W = $t([
   R("sundial-row-preview")
 ], W);
-var Fe = Object.defineProperty, qe = Object.getOwnPropertyDescriptor, ee = (e, t, i, s) => {
-  for (var n = s > 1 ? void 0 : s ? qe(t, i) : t, r = e.length - 1, o; r >= 0; r--)
+var qe = Object.defineProperty, Fe = Object.getOwnPropertyDescriptor, ee = (e, t, i, s) => {
+  for (var n = s > 1 ? void 0 : s ? Fe(t, i) : t, r = e.length - 1, o; r >= 0; r--)
     (o = e[r]) && (n = (s ? o(t, i, n) : o(n)) || n);
-  return s && n && Fe(t, i, n), n;
+  return s && n && qe(t, i, n), n;
 };
 const Y = 4 * 3600, Bt = 4 * 3600;
 let rt = class extends w {
@@ -2100,7 +2098,7 @@ let z = class extends w {
     return a`
       ${_("Adaptation")}
       <div class="grid">
-        ${q(
+        ${F(
       "Interval",
       e.interval,
       10,
@@ -2109,7 +2107,7 @@ let z = class extends w {
       " s",
       (i) => t({ interval: i })
     )}
-        ${q(
+        ${F(
       "Transition",
       e.transition,
       0,
@@ -2118,7 +2116,7 @@ let z = class extends w {
       " s",
       (i) => t({ transition: i })
     )}
-        ${q(
+        ${F(
       "Turn-on transition",
       e.initial_transition,
       0,
@@ -2786,7 +2784,7 @@ let f = class extends w {
       </button>
       <h2>${this._contextTitle()}</h2>
       ${e ? a`<p class="subtitle">${e}</p>` : c}
-      ${this._renderContextBody()}
+      <div class="side-body">${this._renderContextBody()}</div>
     </div>`;
   }
   _renderDrawer() {
@@ -2866,7 +2864,7 @@ let f = class extends w {
       ...l
     });
     return i ? a`
-      ${q(
+      ${F(
       "Brightness",
       n,
       0,
@@ -2879,7 +2877,7 @@ let f = class extends w {
             At 0% this light turns off at this hour, and Sundial won't turn it
             back on automatically.
           </p>` : c}
-      ${et(t) ? q(
+      ${et(t) ? F(
       "Color temp",
       r,
       L,
@@ -3029,7 +3027,14 @@ let f = class extends w {
 f.styles = [
   j,
   A`
+      :host {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+      }
       .head {
+        flex: none;
         display: flex;
         align-items: center;
         gap: 10px;
@@ -3121,16 +3126,20 @@ f.styles = [
         opacity: 0.9;
       }
       .layout {
+        flex: 1;
+        min-height: 0;
         display: grid;
         grid-template-columns: minmax(0, 1fr) 340px;
+        grid-template-rows: minmax(0, 1fr);
         gap: 16px;
         align-items: stretch;
       }
-      /* Let both columns shrink below their content so the timeline scrolls
-         internally instead of overflowing the viewport. */
+      /* Let both columns shrink below their content so each scrolls
+         internally instead of growing the page. */
       .main,
       .side {
         min-width: 0;
+        min-height: 0;
       }
       /* The side holds global settings flat by default; when something is
          selected it becomes a temporary editing card. */
@@ -3140,6 +3149,7 @@ f.styles = [
         display: flex;
         flex-direction: column;
         gap: 10px;
+        overflow: hidden;
       }
       .side.editing {
         background: var(--surface);
@@ -3147,6 +3157,13 @@ f.styles = [
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         padding: 18px;
+      }
+      /* The title row stays put; only the form below it scrolls. */
+      .side-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
       .side h2 {
         margin: 0 0 4px;
@@ -3315,15 +3332,8 @@ f.styles = [
       }
 
       @media (max-width: 960px) {
-        :host {
-          display: flex;
-          flex-direction: column;
-          height: 100%;
-          min-height: 0;
-        }
         /* Fixed-height single-row sticky bar on a soft surface. */
         .head {
-          flex: none;
           position: sticky;
           top: 0;
           z-index: 20;
@@ -3340,14 +3350,8 @@ f.styles = [
           font-size: 1.05rem;
         }
         .layout {
-          flex: 1;
-          min-height: 0;
           grid-template-columns: minmax(0, 1fr);
-          grid-template-rows: minmax(0, 1fr);
           gap: 0;
-        }
-        .main {
-          min-height: 0;
         }
       }
     `
@@ -3468,49 +3472,55 @@ y.styles = [
   Ee,
   j,
   A`
+      /* The panel is exactly as tall as the viewport; everything inside it
+         scrolls in its own column rather than scrolling the page. */
+      :host {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+      }
       .wrap {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
         width: 100%;
-        padding: 18px 20px 64px;
+        padding: 18px 20px;
         overflow-x: clip;
+      }
+      .wrap > .card {
+        flex: none;
+      }
+      sundial-schema-editor {
+        flex: 1 1 auto;
+        min-height: 0;
       }
       .error {
         border-color: var(--danger);
         color: var(--danger);
       }
       @media (max-width: 960px) {
-        /* Pin the whole panel to the viewport on small screens: with the
-           host fixed, no drag anywhere can scroll the page — the timeline
-           scrolls internally and that's it. The explicit height matters:
-           inside Home Assistant an ancestor with transform/contain can
-           become the fixed-position containing block, and inset alone would
-           then size the panel to that (possibly short) ancestor instead of
-           the screen. */
+        /* Additionally pin the host on small screens, so no drag anywhere
+           can rubber-band the page. The explicit height matters: inside Home
+           Assistant an ancestor with transform/contain can become the
+           fixed-position containing block, and inset alone would then size
+           the panel to that (possibly short) ancestor instead of the
+           screen. */
         :host {
           position: fixed;
           inset: 0;
-          height: 100vh;
-          height: 100dvh;
-          min-height: 0;
-          overflow: hidden;
           overscroll-behavior: none;
         }
         /* Edge to edge: the timeline's scroll indicator should sit at the
            screen edge, so the gutter lives on the inner content instead. */
         .wrap {
-          height: 100%;
-          display: flex;
-          flex-direction: column;
           padding: 0;
-          overflow: hidden;
           overscroll-behavior: none;
         }
         .wrap > .card {
-          flex: none;
           margin: 8px 12px 0;
-        }
-        sundial-schema-editor {
-          flex: 1 1 auto;
-          min-height: 0;
         }
       }
     `
