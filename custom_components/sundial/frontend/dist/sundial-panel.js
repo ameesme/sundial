@@ -1377,7 +1377,7 @@ let $ = class extends w {
       ${this.previewActive ? this._scrubBar() : c}
       <div class="scroll ${this.scrollLocked ? "locked" : ""}">
         <div class="rows">
-          ${this._scrubRow()}
+          ${this.previewActive ? this._scrubRow() : c}
           ${this._headerRow(e)}
           ${this._sunRow()}
           ${this._lightGroups().map(
@@ -1414,7 +1414,8 @@ let $ = class extends w {
       @input=${(e) => this._emit("scrub", Number(e.target.value) / 60)}
     />`;
   }
-  // Desktop: part of the grid, so the track lines up with the hour columns.
+  // Desktop, while previewing: part of the grid, so the track lines up with
+  // the hour columns.
   _scrubRow() {
     return a`<div class="gridrow scrubrow">
       <div class="label">

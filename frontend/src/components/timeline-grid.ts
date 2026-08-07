@@ -347,7 +347,7 @@ export class TimelineGrid extends LitElement {
       ${this.previewActive ? this._scrubBar() : nothing}
       <div class="scroll ${this.scrollLocked ? "locked" : ""}">
         <div class="rows">
-          ${this._scrubRow()}
+          ${this.previewActive ? this._scrubRow() : nothing}
           ${this._headerRow(nowHour)}
           ${this._sunRow()}
           ${this._lightGroups().map(
@@ -390,7 +390,8 @@ export class TimelineGrid extends LitElement {
     />`;
   }
 
-  // Desktop: part of the grid, so the track lines up with the hour columns.
+  // Desktop, while previewing: part of the grid, so the track lines up with
+  // the hour columns.
   private _scrubRow(): TemplateResult {
     return html`<div class="gridrow scrubrow">
       <div class="label">
