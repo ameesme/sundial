@@ -51,10 +51,47 @@ from .const import (
 HourCell = dict[str, Any] | None
 
 
+class InvalidStoreData(ValueError):
+    """A document that cannot be parsed into a :class:`StoreData`.
+
+    Raised only for structural problems that have no sane default (a schema
+    with no id, ``schemas`` that isn't a mapping). Individual bad *values*
+    degrade to their field default instead — see :func:`_as_number`.
+    """
+
+
 def _coerce(cls: type, data: dict[str, Any]) -> dict[str, Any]:
     """Keep only keys that are valid fields of ``cls``."""
     valid = {f.name for f in fields(cls)}
     return {k: v for k, v in data.items() if k in valid}
+
+
+def _as_number(value: Any, default: Any) -> Any:
+    """Coerce ``value`` to the type of ``default``, falling back to it.
+
+    Hand-edited backups arrive with strings (or nonsense) where numbers
+    belong. Falling back per key means one bad field degrades that field
+    rather than failing the whole import — or, worse, sailing through to
+    something like ``timedelta(seconds="abc")`` much later.
+    """
+    if isinstance(value, bool):
+        return default
+    try:
+        return type(default)(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _coerce_numbers(cls: type, data: dict[str, Any]) -> dict[str, Any]:
+    """Coerce every numeric field of ``cls`` against its declared default."""
+    for f in fields(cls):
+        if (
+            f.name in data
+            and isinstance(f.default, (int, float))
+            and not isinstance(f.default, bool)
+        ):
+            data[f.name] = _as_number(data[f.name], f.default)
+    return data
 
 
 def _order_range(lo: Any, hi: Any) -> tuple[Any, Any]:
@@ -126,7 +163,9 @@ class SunConfig:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> SunConfig:
-        return cls(**_coerce(cls, data or {}))
+        if not isinstance(data, dict):
+            data = {}
+        return cls(**_coerce_numbers(cls, _coerce(cls, data)))
 
 
 @dataclass
@@ -168,7 +207,9 @@ class LightConfig:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> LightConfig:
-        return cls(**_coerce(cls, data or {}))
+        if not isinstance(data, dict):
+            data = {}
+        return cls(**_coerce_numbers(cls, _coerce(cls, data)))
 
 
 @dataclass
@@ -194,13 +235,24 @@ class Schema:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Schema:
+        if not isinstance(data, dict):
+            raise InvalidStoreData(
+                f"a schema must be an object, got {type(data).__name__}"
+            )
+        if not data.get("id"):
+            raise InvalidStoreData("a schema is missing its 'id'")
+        schema_id = str(data["id"])
+        lights = data.get("lights") or {}
+        if not isinstance(lights, dict):
+            raise InvalidStoreData(
+                f"schema '{schema_id}' has a 'lights' that is not an object"
+            )
         return cls(
-            id=data["id"],
-            name=data.get("name", data["id"]),
+            id=schema_id,
+            name=str(data.get("name") or schema_id),
             sun=SunConfig.from_dict(data.get("sun")),
             lights={
-                eid: LightConfig.from_dict(cfg)
-                for eid, cfg in (data.get("lights") or {}).items()
+                str(eid): LightConfig.from_dict(cfg) for eid, cfg in lights.items()
             },
         )
 
@@ -225,7 +277,9 @@ class GlobalSettings:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> GlobalSettings:
-        merged = _coerce(cls, data)
+        if not isinstance(data, dict):
+            data = {}
+        merged = _coerce_numbers(cls, _coerce(cls, data))
         for key in ("sun_latitude", "sun_longitude"):
             if key in merged and merged[key] is not None:
                 try:
@@ -267,12 +321,28 @@ class StoreData:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any] | None) -> StoreData:
-        data = data or {}
+        """Parse a stored/imported document.
+
+        Raises :class:`InvalidStoreData` if the shape is wrong; callers that
+        accept user-supplied files (the panel's import) are expected to catch
+        it and report back rather than let it surface as an unknown error.
+        """
+        if data is None:
+            data = {}
+        if not isinstance(data, dict):
+            raise InvalidStoreData(
+                f"the document must be an object, got {type(data).__name__}"
+            )
+        schemas = data.get("schemas") or {}
+        if not isinstance(schemas, dict):
+            raise InvalidStoreData(
+                f"'schemas' must be an object keyed by id, got "
+                f"{type(schemas).__name__}"
+            )
         return cls(
-            settings=GlobalSettings.from_dict(data.get("settings", {})),
-            schemas={
-                sid: Schema.from_dict(sd)
-                for sid, sd in (data.get("schemas") or {}).items()
-            },
-            active_schema_id=data.get("active_schema_id", DEFAULT_SCHEMA_ID),
+            settings=GlobalSettings.from_dict(data.get("settings") or {}),
+            schemas={str(sid): Schema.from_dict(sd) for sid, sd in schemas.items()},
+            active_schema_id=str(
+                data.get("active_schema_id") or DEFAULT_SCHEMA_ID
+            ),
         )

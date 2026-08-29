@@ -37,6 +37,17 @@ brightness and temperature range, which defaults to what the bulb supports.
 Tap an hour in the timeline and hit **Override** to set exact values like brightness,
 temperature, or an RGB colour. Sundial blends the values between hours.
 
+#### Light groups
+**Add the individual lights rather than a group.** A group reports itself as *on*
+when any one member is on, so Sundial adapting it sends `light.turn_on` to the
+whole group — switching on members you deliberately left off. Sundial does not
+narrow the write to the members that look lit, because per-member state is not
+reliable enough to decide who to skip: a Zigbee bulb lit by an earlier groupcast
+often still reads as off, and skipping it would leave it stuck at yesterday's
+values. Adding each light separately gives Sundial per-light state to work with,
+and you keep per-light ranges and overrides. The panel flags a controlled entity
+it can recognise as a group in the **Status** section.
+
 ## Other features
 - Live **preview**: scrub through the day and optionally see your lights adapt as you 
   drag.

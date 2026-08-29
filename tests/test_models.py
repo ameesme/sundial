@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import pytest
+
 from sundial.const import DEFAULT_SCHEMA_ID, HOURS_PER_DAY
 from sundial.models import (
     GlobalSettings,
+    InvalidStoreData,
     LightConfig,
     Schema,
     StoreData,
@@ -108,3 +111,68 @@ def test_storedata_round_trip():
     assert restored.settings.interval == 60
     assert restored.active_schema_id == DEFAULT_SCHEMA_ID
     assert DEFAULT_SCHEMA_ID in restored.schemas
+
+
+# --- malformed input ---------------------------------------------------------
+#
+# A hand-edited backup reaches StoreData.from_dict unvalidated. Structural
+# breakage raises InvalidStoreData (the panel reports it); individual bad
+# values degrade to the field default.
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        {"schemas": {"a": {"name": "no id"}}},  # schema without an id
+        {"schemas": {"a": "not a dict"}},
+        {"schemas": [{"id": "a"}]},  # schemas as a list
+        {"schemas": {"a": {"id": "a", "lights": ["light.kitchen"]}}},
+        "not a document",
+    ],
+)
+def test_from_dict_rejects_malformed_documents(document):
+    with pytest.raises(InvalidStoreData):
+        StoreData.from_dict(document)
+
+
+def test_from_dict_coerces_numeric_strings():
+    data = StoreData.from_dict(
+        {
+            "settings": {"interval": "60", "transition": "10"},
+            "schemas": {
+                "a": {"id": "a", "lights": {"light.k": {"max_brightness": "80"}}}
+            },
+        }
+    )
+    assert data.settings.interval == 60
+    assert data.settings.transition == 10
+    assert data.schemas["a"].lights["light.k"].max_brightness == 80
+
+
+def test_from_dict_falls_back_on_non_numeric_values():
+    data = StoreData.from_dict(
+        {
+            "settings": {"interval": "abc", "transition": None},
+            "schemas": {
+                "a": {"id": "a", "lights": {"light.k": {"min_brightness": "x"}}}
+            },
+        }
+    )
+    # Defaults, rather than a string that would explode at timedelta() time.
+    assert data.settings.interval == GlobalSettings().interval
+    assert data.settings.transition == GlobalSettings().transition
+    light = data.schemas["a"].lights["light.k"]
+    assert light.min_brightness == LightConfig().min_brightness
+
+
+def test_from_dict_tolerates_non_dict_sub_objects():
+    data = StoreData.from_dict(
+        {"settings": "nope", "schemas": {"a": {"id": "a", "sun": "nope"}}}
+    )
+    assert data.settings.interval == GlobalSettings().interval
+    assert data.schemas["a"].sun.min_brightness == SunConfig().min_brightness
+
+
+def test_from_dict_accepts_none_and_empty():
+    assert StoreData.from_dict(None).active_schema_id == DEFAULT_SCHEMA_ID
+    assert StoreData.from_dict({}).active_schema_id == DEFAULT_SCHEMA_ID
