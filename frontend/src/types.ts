@@ -142,8 +142,10 @@ export interface LightStatus {
   last_evaluated_at: string | null;
   last_outcome: LightOutcome | null;
   settling: boolean;
-  // "group": a group whose members we can read, and narrow writes to. A
-  // Zigbee group publishes no member list, so it arrives as "light".
+  // "group": a group that publishes its member list, so the panel can warn
+  // that adapting it switches on members the user left off. Writes are never
+  // narrowed to a subset. A Zigbee group publishes no member list, so it
+  // arrives as "light".
   group: {
     kind: "group" | "light";
     members: number | null;

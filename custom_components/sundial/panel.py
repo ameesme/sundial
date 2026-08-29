@@ -41,7 +41,7 @@ from .const import (
 )
 from .coordinator import SundialCoordinator, get_coordinator, local_hour
 from .engine import Target
-from .models import GlobalSettings, Schema, StoreData
+from .models import GlobalSettings, InvalidStoreData, Schema, StoreData
 
 # The manifest version, resolved once at panel setup (single instance) so the
 # sync payload builder can include it.
@@ -208,11 +208,13 @@ def _group_status(
 ) -> dict:
     """Whether this entity is a light group, and how many members are lit.
 
-    Turning a group on lights every member, so adapting one that is only
-    partly on would switch on lights the user left off — :meth:`_write_targets`
-    narrows the write to the lit ones. Only groups that publish a member list
-    can be recognised (and narrowed); Zigbee groups look like ordinary lights
-    from here, so they are reported as such rather than guessed at.
+    Reported so the panel can warn about groups: turning a group on lights
+    every member, so adapting one that is only partly on switches on lights
+    the user left off. Writes are deliberately *not* narrowed to the lit
+    members — see :meth:`SundialCoordinator.group_members` for why — so the
+    recommendation is to add the individual lights instead. Only groups that
+    publish a member list can be recognised at all; Zigbee groups look like
+    ordinary lights from here, so they are reported as such.
     """
     members = coordinator.group_members(entity_id)
     if members is None:
@@ -348,6 +350,11 @@ def _error_if_not_ready(connection, msg) -> SundialCoordinator | None:
 
 
 # --- WebSocket commands ------------------------------------------------------
+#
+# Every command is admin-only. The sidebar panel is registered with
+# ``require_admin=True``, but that only hides the UI — without
+# ``@websocket_api.require_admin`` on the handlers themselves any logged-in
+# user could still call them straight over the WebSocket connection.
 
 
 def _register_ws_commands(hass: HomeAssistant) -> None:
@@ -368,6 +375,7 @@ def _register_ws_commands(hass: HomeAssistant) -> None:
         websocket_api.async_register_command(hass, handler)
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "sundial/get_config"})
 @websocket_api.async_response
 async def ws_get_config(hass, connection, msg) -> None:
@@ -376,6 +384,7 @@ async def ws_get_config(hass, connection, msg) -> None:
         connection.send_result(msg["id"], _config_payload(hass, coordinator))
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "sundial/update_settings",
@@ -394,6 +403,7 @@ async def ws_update_settings(hass, connection, msg) -> None:
     connection.send_result(msg["id"], _config_payload(hass, coordinator))
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "sundial/save_schema",
@@ -408,12 +418,17 @@ async def ws_save_schema(hass, connection, msg) -> None:
     if not msg["schema"].get("id"):
         connection.send_error(msg["id"], "invalid_schema", "Schema id is required")
         return
-    schema = Schema.from_dict(msg["schema"])
+    try:
+        schema = Schema.from_dict(msg["schema"])
+    except InvalidStoreData as err:
+        connection.send_error(msg["id"], "invalid_schema", str(err))
+        return
     coordinator.data.schemas[schema.id] = schema
     await coordinator.async_apply_config_change()
     connection.send_result(msg["id"], _config_payload(hass, coordinator))
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "sundial/delete_schema",
@@ -438,6 +453,7 @@ async def ws_delete_schema(hass, connection, msg) -> None:
     connection.send_result(msg["id"], _config_payload(hass, coordinator))
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "sundial/set_active_schema",
@@ -455,12 +471,20 @@ async def ws_set_active_schema(hass, connection, msg) -> None:
 
 
 def _resolve_schema(coordinator: SundialCoordinator, msg) -> Schema | None:
-    """The inline draft ``schema`` if given, else the stored one by id."""
+    """The inline draft ``schema`` if given, else the stored one by id.
+
+    Returns None for a draft that won't parse, which the callers already
+    report as an unknown schema.
+    """
     if msg.get("schema"):
-        return Schema.from_dict(msg["schema"])
+        try:
+            return Schema.from_dict(msg["schema"])
+        except InvalidStoreData:
+            return None
     return coordinator.data.schemas.get(msg.get("schema_id"))
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "sundial/timeline",
@@ -480,6 +504,7 @@ async def ws_timeline(hass, connection, msg) -> None:
     connection.send_result(msg["id"], coordinator.compute_timeline(schema))
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "sundial/preview",
@@ -499,6 +524,7 @@ async def ws_preview(hass, connection, msg) -> None:
     connection.send_result(msg["id"], {"targets": targets})
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "sundial/apply",
@@ -516,6 +542,7 @@ async def ws_apply(hass, connection, msg) -> None:
     connection.send_result(msg["id"], _config_payload(hass, coordinator))
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "sundial/export"})
 @websocket_api.async_response
 async def ws_export(hass, connection, msg) -> None:
@@ -525,6 +552,7 @@ async def ws_export(hass, connection, msg) -> None:
         connection.send_result(msg["id"], coordinator.data.to_dict())
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "sundial/import",
@@ -535,18 +563,25 @@ async def ws_export(hass, connection, msg) -> None:
 async def ws_import(hass, connection, msg) -> None:
     """Restore a previously exported configuration.
 
-    ``StoreData.from_dict`` normalises everything (unknown keys are dropped,
-    hour cells coerced, a default schema guaranteed), so a malformed file
-    degrades to defaults rather than corrupting the store.
+    ``StoreData.from_dict`` normalises what it can (unknown keys are dropped,
+    hour cells and numbers coerced, a default schema guaranteed) but rejects a
+    document whose shape is wrong. Parsing happens before the store is
+    reassigned, so a rejected file leaves the running config untouched.
     """
     coordinator = _error_if_not_ready(connection, msg)
     if coordinator is None:
         return
-    coordinator.store.data = StoreData.from_dict(msg["data"])
+    try:
+        parsed = StoreData.from_dict(msg["data"])
+    except InvalidStoreData as err:
+        connection.send_error(msg["id"], "invalid_data", f"Invalid backup: {err}")
+        return
+    coordinator.store.data = parsed
     await coordinator.async_apply_config_change()
     connection.send_result(msg["id"], _config_payload(hass, coordinator))
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "sundial/status"})
 @websocket_api.async_response
 async def ws_status(hass, connection, msg) -> None:
@@ -556,6 +591,7 @@ async def ws_status(hass, connection, msg) -> None:
         connection.send_result(msg["id"], _status_payload(hass, coordinator))
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "sundial/set_manual_control",
