@@ -9,6 +9,22 @@ import type {
   TimelineData,
 } from "./types";
 
+/** Readable text for a rejected WS call.
+ *
+ * Home Assistant rejects with a plain `{ code, message }` object, which
+ * `String()` would render as "[object Object]" — hiding backend messages
+ * like the reason an imported backup was refused.
+ */
+export function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object" && err !== null) {
+    const { message, code } = err as { message?: unknown; code?: unknown };
+    if (typeof message === "string" && message) return message;
+    if (typeof code === "string" && code) return code;
+  }
+  return String(err);
+}
+
 interface PreviewResult {
   targets: Record<
     string,

@@ -1,7 +1,7 @@
 import { LitElement, css, html, type TemplateResult } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 
-import type { SundialApi } from "../api";
+import { errorMessage, type SundialApi } from "../api";
 import {
   checkboxField,
   coordField,
@@ -54,7 +54,7 @@ export class SettingsTab extends LitElement {
   private _error(err: unknown): void {
     this.dispatchEvent(
       new CustomEvent("panel-error", {
-        detail: String(err),
+        detail: errorMessage(err),
         bubbles: true,
         composed: true,
       })

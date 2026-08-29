@@ -1,7 +1,7 @@
 import { LitElement, html, css, nothing, type TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
-import { SundialApi } from "./api";
+import { SundialApi, errorMessage } from "./api";
 import { baseStyles, tokenStyles } from "./theme";
 import type { ConfigPayload, HomeAssistant } from "./types";
 import { defaultSchema } from "./utils";
@@ -194,7 +194,7 @@ export class SundialPanel extends LitElement {
       this._config = await promise;
       this._error = undefined;
     } catch (err) {
-      this._error = String(err);
+      this._error = errorMessage(err);
     }
   }
 }

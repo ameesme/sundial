@@ -7,11 +7,15 @@ assignments and global settings.
 
 from __future__ import annotations
 
+import logging
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import STORAGE_KEY, STORAGE_VERSION
-from .models import StoreData
+from .models import InvalidStoreData, StoreData
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class SundialStore:
@@ -22,9 +26,22 @@ class SundialStore:
         self.data: StoreData = StoreData()
 
     async def async_load(self) -> StoreData:
-        """Load persisted data, falling back to defaults on first run."""
+        """Load persisted data, falling back to defaults on first run.
+
+        A structurally broken file starts us on defaults rather than failing
+        setup: it is not overwritten until something saves, so the original
+        stays on disk to be recovered by hand.
+        """
         raw = await self._store.async_load()
-        self.data = StoreData.from_dict(raw)
+        try:
+            self.data = StoreData.from_dict(raw)
+        except InvalidStoreData:
+            _LOGGER.exception(
+                "Stored configuration in .storage/%s could not be read; "
+                "starting from defaults. The file has not been modified",
+                STORAGE_KEY,
+            )
+            self.data = StoreData()
         return self.data
 
     async def async_save(self) -> None:

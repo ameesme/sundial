@@ -8,7 +8,7 @@ import {
 } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
-import type { SundialApi } from "../api";
+import { errorMessage, type SundialApi } from "../api";
 import {
   checkboxField,
   minMaxField,
@@ -573,7 +573,7 @@ export class SchemaEditor extends LitElement {
       const config = await this.api.saveSchema(this._draft);
       this._emit("config-changed", config);
     } catch (err) {
-      this._emit("panel-error", String(err));
+      this._emit("panel-error", errorMessage(err));
     }
   }
 
@@ -1146,7 +1146,7 @@ export class SchemaEditor extends LitElement {
     void this.api
       .setActiveSchema(this._draft.id)
       .then((config) => this._emit("config-changed", config))
-      .catch((err) => this._emit("panel-error", String(err)));
+      .catch((err) => this._emit("panel-error", errorMessage(err)));
   };
 
   private _rename = (): void => {
