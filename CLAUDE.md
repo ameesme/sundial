@@ -113,9 +113,11 @@ IKEA-style lights can send brightness and color as **separate** `turn_on` calls
 
 `npm run dev` serves `frontend/index.html` + `frontend/dev/`, mounting the real
 `<sundial-panel>` against an in-memory mock backend with fake lights — no Home
-Assistant. `frontend/dev/engine.ts` is a JavaScript **port of `engine.py`**; if
-you change the lighting math in Python, mirror it there so the harness matches
-production. The harness is dev-only: `vite build` bundles only `src/`, so
+Assistant. The lighting math is **not** ported to JavaScript: `mock-backend.ts`
+serves a `SUN_ROW` fixture captured from `engine.py`, with each light's explicit
+hour cells laid over it. So the harness is for UI work — editing the sun config
+won't move the curve there. Regenerate the fixture if the sun defaults change.
+The harness is dev-only: `vite build` bundles only `src/`, so
 `dev/` and `index.html` never reach the shipped asset (it is in the tsconfig
 `include` for type-checking but excluded from the lib build).
 

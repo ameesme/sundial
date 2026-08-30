@@ -73,7 +73,14 @@ export class SchemaEditor extends LitElement {
   static override styles = [
     baseStyles,
     css`
+      :host {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+      }
       .head {
+        flex: none;
         display: flex;
         align-items: center;
         gap: 10px;
@@ -115,9 +122,6 @@ export class SchemaEditor extends LitElement {
         width: 100%;
         opacity: 0;
         cursor: pointer;
-      }
-      .grow {
-        flex: 1;
       }
       input[type="color"] {
         width: 52px;
@@ -168,16 +172,20 @@ export class SchemaEditor extends LitElement {
         opacity: 0.9;
       }
       .layout {
+        flex: 1;
+        min-height: 0;
         display: grid;
         grid-template-columns: minmax(0, 1fr) 340px;
+        grid-template-rows: minmax(0, 1fr);
         gap: 16px;
         align-items: stretch;
       }
-      /* Let both columns shrink below their content so the timeline scrolls
-         internally instead of overflowing the viewport. */
+      /* Let both columns shrink below their content so each scrolls
+         internally instead of growing the page. */
       .main,
       .side {
         min-width: 0;
+        min-height: 0;
       }
       /* The side holds global settings flat by default; when something is
          selected it becomes a temporary editing card. */
@@ -187,6 +195,7 @@ export class SchemaEditor extends LitElement {
         display: flex;
         flex-direction: column;
         gap: 10px;
+        overflow: hidden;
       }
       .side.editing {
         background: var(--surface);
@@ -194,6 +203,13 @@ export class SchemaEditor extends LitElement {
         border-radius: var(--radius);
         box-shadow: var(--shadow);
         padding: 18px;
+      }
+      /* The title row stays put; only the form below it scrolls. */
+      .side-body {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
       }
       .side h2 {
         margin: 0 0 4px;
@@ -362,15 +378,8 @@ export class SchemaEditor extends LitElement {
       }
 
       @media (max-width: 960px) {
-        :host {
-          display: flex;
-          flex-direction: column;
-          height: 100%;
-          min-height: 0;
-        }
         /* Fixed-height single-row sticky bar on a soft surface. */
         .head {
-          flex: none;
           position: sticky;
           top: 0;
           z-index: 20;
@@ -387,14 +396,8 @@ export class SchemaEditor extends LitElement {
           font-size: 1.05rem;
         }
         .layout {
-          flex: 1;
-          min-height: 0;
           grid-template-columns: minmax(0, 1fr);
-          grid-template-rows: minmax(0, 1fr);
           gap: 0;
-        }
-        .main {
-          min-height: 0;
         }
       }
     `,
@@ -591,7 +594,7 @@ export class SchemaEditor extends LitElement {
   /** The bulb's supported colour-temperature range, normalised to the
    *  editor's 50 K slider grid and bounds; null when unknown/RGB-only. */
   private _bulbCtRange(entityId: string): [number, number] | null {
-    const light = this.config.lights.find((l) => l.entity_id === entityId);
+    const light = this._lightInfo(entityId);
     if (
       light?.min_color_temp_kelvin == null ||
       light?.max_color_temp_kelvin == null
@@ -806,7 +809,7 @@ export class SchemaEditor extends LitElement {
       </button>
       <h2>${this._contextTitle()}</h2>
       ${subtitle ? html`<p class="subtitle">${subtitle}</p>` : nothing}
-      ${this._renderContextBody()}
+      <div class="side-body">${this._renderContextBody()}</div>
     </div>`;
   }
 
@@ -895,10 +898,7 @@ export class SchemaEditor extends LitElement {
           ? sel.ref.entityId
           : null;
     if (!entityId) return null;
-    return (
-      this.config.lights.find((l) => l.entity_id === entityId)?.area_name ??
-      null
-    );
+    return this._lightInfo(entityId)?.area_name ?? null;
   }
 
   private _renderContextBody(): TemplateResult {
@@ -944,7 +944,7 @@ export class SchemaEditor extends LitElement {
   }
 
   private _renderCellEditor(ref: CellRef): TemplateResult {
-    const light = this.config.lights.find((l) => l.entity_id === ref.entityId);
+    const light = this._lightInfo(ref.entityId);
     const explicit = this._lightCfg(ref.entityId).hours[ref.hour];
     const effective = this._timeline?.lights[ref.entityId]?.[ref.hour];
     const brightness = explicit?.brightness ?? effective?.brightness ?? 50;
@@ -1057,7 +1057,7 @@ export class SchemaEditor extends LitElement {
     entityId: string,
     cfg: LightConfig
   ): TemplateResult | typeof nothing {
-    const light = this.config.lights.find((l) => l.entity_id === entityId);
+    const light = this._lightInfo(entityId);
     if (!light?.supports_rgb || light.min_color_temp_kelvin == null) {
       return nothing;
     }

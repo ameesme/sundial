@@ -12,7 +12,6 @@ Home Assistant data and acts on the result.
 from __future__ import annotations
 
 import asyncio
-from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -42,6 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.event import (
     async_call_later,
     async_track_state_change_event,
@@ -55,6 +55,7 @@ from .const import (
     CONF_LIGHTS,
     DOMAIN,
     HOURS_PER_DAY,
+    PANEL_TITLE,
     SIGNAL_CONFIG_UPDATED,
 )
 from .engine import DriveSignal, Target
@@ -75,6 +76,10 @@ MIN_SPLIT_DELAY = 0.35
 # detection for the transition plus this grace, so our own writes settling — or
 # mid-fade values — aren't mistaken for a manual change.
 SETTLE_GRACE = 3.0
+
+# How many of our own service-call context ids to remember, so a light's
+# resulting state change can be told apart from a manual one.
+CONTEXT_MEMORY = 1024
 
 # Colour modes that accept an rgb_color (HA converts to the light's mode).
 _RGB_MODES = frozenset(
@@ -116,9 +121,7 @@ class LightRuntime:
     # Diagnostics for the panel's status section. All wall-clock UTC, all
     # in-memory: they describe what just happened, not what to restore.
     manual_reason: str | None = None
-    manual_since: datetime | None = None
     auto_reset_at: datetime | None = None
-    last_applied_at: datetime | None = None
     last_evaluated_at: datetime | None = None
     last_outcome: str | None = None
 
@@ -152,14 +155,13 @@ class SundialCoordinator:
         self._last_preview_targets: dict[str, Target] = {}
 
         # Context ids of service calls we made, so we can tell our own writes
-        # apart from manual changes. Bounded to avoid unbounded growth.
-        self._our_contexts: deque[str] = deque(maxlen=1024)
-        self._our_context_set: set[str] = set()
+        # apart from manual changes. Insertion-ordered and bounded to avoid
+        # unbounded growth.
+        self._our_contexts: dict[str, None] = {}
 
-        # Diagnostics for the panel's status section: when the last full pass
-        # ran, and the instant the interval timer was armed (its ticks are
-        # multiples of the interval from there, so the next one is derivable).
-        self._last_pass_at: datetime | None = None
+        # The instant the interval timer was armed: its ticks are multiples of
+        # the interval from there, so the next pass is derivable (the panel's
+        # status section shows it).
         self._interval_anchor: datetime | None = None
 
     # --- configuration accessors --------------------------------------------
@@ -282,7 +284,6 @@ class SundialCoordinator:
     async def async_adapt_all(self) -> None:
         async with self._adapt_lock:
             now = dt_util.utcnow()
-            self._last_pass_at = now
             drives = self._sun_drives(self.data.active_schema.sun, now)
             for entity_id in self._lights:
                 await self.async_adapt_one(entity_id, now=now, drives=drives)
@@ -322,7 +323,7 @@ class SundialCoordinator:
         state = self.hass.states.get(entity_id)
         if state is None:
             return
-        target = self._compute_target(entity_id, dt_util.utcnow())
+        target = self.compute_target(entity_id, dt_util.utcnow())
         light_cfg = self.data.active_schema.light_config(entity_id)
         await self._drive_light(
             entity_id,
@@ -358,7 +359,7 @@ class SundialCoordinator:
         if state is None:
             rt.last_outcome = OUTCOME_NO_STATE
             return
-        target = self._compute_target(entity_id, now, drives)
+        target = self.compute_target(entity_id, now, drives)
         if (
             initial
             and target.brightness_pct is not None
@@ -404,7 +405,6 @@ class SundialCoordinator:
             allow_turn_on,
         ):
             rt.last_target = target
-            rt.last_applied_at = now
             rt.last_outcome = OUTCOME_TURNED_OFF if scheduled_off else OUTCOME_APPLIED
             rt.settle_deadline = self.hass.loop.time() + transition + SETTLE_GRACE
             self._last_preview_targets.pop(entity_id, None)
@@ -413,7 +413,7 @@ class SundialCoordinator:
             # just to adapt it (or to realise a scheduled 0%).
             rt.last_outcome = OUTCOME_LIGHT_OFF
 
-    def _compute_target(
+    def compute_target(
         self,
         entity_id: str,
         now: datetime,
@@ -464,7 +464,7 @@ class SundialCoordinator:
 
     # --- applying values to lights ------------------------------------------
 
-    def _supported_modes(self, entity_id: str) -> tuple[bool, bool, bool]:
+    def supported_modes(self, entity_id: str) -> tuple[bool, bool, bool]:
         """(supports_brightness, supports_color_temp, supports_rgb)."""
         state = self.hass.states.get(entity_id)
         if state is None:
@@ -503,7 +503,7 @@ class SundialCoordinator:
     async def _apply_light(
         self, entity_id: str, light_cfg: LightConfig, target: Target, transition: float
     ) -> None:
-        supports_brightness, supports_color, supports_rgb = self._supported_modes(
+        supports_brightness, supports_color, supports_rgb = self.supported_modes(
             entity_id
         )
         brightness = target.brightness_pct if supports_brightness else None
@@ -588,15 +588,13 @@ class SundialCoordinator:
         return True
 
     def _remember_context(self, context_id: str) -> None:
-        dq = self._our_contexts
-        if len(dq) == dq.maxlen:
-            self._our_context_set.discard(dq[0])
-        dq.append(context_id)
-        self._our_context_set.add(context_id)
+        self._our_contexts[context_id] = None
+        if len(self._our_contexts) > CONTEXT_MEMORY:
+            del self._our_contexts[next(iter(self._our_contexts))]
 
     def is_our_context(self, context_id: str | None) -> bool:
         """Whether ``context_id`` belongs to one of our own service calls."""
-        return context_id is not None and context_id in self._our_context_set
+        return context_id is not None and context_id in self._our_contexts
 
     # --- sun events (astral + per-sun time overrides) -----------------------
 
@@ -678,7 +676,7 @@ class SundialCoordinator:
         entity_id = event.data["entity_id"]
         if entity_id not in self._runtime:
             return
-        if event.context.id in self._our_context_set:
+        if self.is_our_context(event.context.id):
             return  # our own adaptation, ignore
 
         new_state = event.data.get("new_state")
@@ -746,15 +744,7 @@ class SundialCoordinator:
         changed = rt.manual_control != manual
         rt.manual_control = manual
 
-        if manual:
-            rt.manual_reason = reason
-            # "Manual since" dates from the first manual event of the run, not
-            # from every re-arm — the auto-reset window slides, this doesn't.
-            if changed or rt.manual_since is None:
-                rt.manual_since = dt_util.utcnow()
-        else:
-            rt.manual_reason = None
-            rt.manual_since = None
+        rt.manual_reason = reason if manual else None
 
         if rt.auto_reset_unsub:
             rt.auto_reset_unsub()
@@ -791,28 +781,11 @@ class SundialCoordinator:
         """Public setter used by the ``sundial.set_manual_control`` service."""
         self._set_manual_control(entity_id, manual, reason=MANUAL_SERVICE)
 
-    def supports_rgb(self, entity_id: str) -> bool:
-        """Whether the light can take an RGB colour (for the web-ui editor)."""
-        return self._supported_modes(entity_id)[2]
-
     # --- diagnostics (the web-ui status section) ----------------------------
 
     def runtime(self, entity_id: str) -> LightRuntime | None:
         """The live per-light runtime state, for the panel's status section."""
         return self._runtime.get(entity_id)
-
-    def supported_modes(self, entity_id: str) -> tuple[bool, bool, bool]:
-        """(supports_brightness, supports_color_temp, supports_rgb)."""
-        return self._supported_modes(entity_id)
-
-    def compute_target(self, entity_id: str, now: datetime) -> Target:
-        """What the active schema wants for ``entity_id`` at ``now``."""
-        return self._compute_target(entity_id, now)
-
-    def is_settling(self, entity_id: str) -> bool:
-        """Whether our last write to ``entity_id`` is still settling."""
-        rt = self._runtime.get(entity_id)
-        return rt is not None and self.hass.loop.time() < rt.settle_deadline
 
     def sun_state(
         self, sun: SunConfig, now: datetime
@@ -824,11 +797,6 @@ class SundialCoordinator:
         """
         snap = engine.sun_snapshot(now, self._sun_events(sun, now))
         return snap, engine.sun_drive(now, snap, sun)
-
-    @property
-    def last_pass_at(self) -> datetime | None:
-        """When the last full adaptation pass ran."""
-        return self._last_pass_at
 
     @property
     def next_pass_at(self) -> datetime | None:
@@ -865,7 +833,7 @@ class SundialCoordinator:
             lights[entity_id] = [
                 {
                     "brightness": int(round(anchors[hour][0])),
-                    "color_temp": int(round(anchors[hour][1] / 5) * 5),
+                    "color_temp": engine.round5(anchors[hour][1]),
                     "rgb_color": (
                         list(anchors[hour][2]) if anchors[hour][2] else None
                     ),
@@ -897,6 +865,16 @@ class SundialCoordinator:
                     await self._apply_light(entity_id, cfg, target, PREVIEW_TRANSITION)
                     self._last_preview_targets[entity_id] = target
             return targets
+
+
+def device_info(entry: ConfigEntry) -> DeviceInfo:
+    """The single device Sundial's entities attach to."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, entry.entry_id)},
+        name=PANEL_TITLE,
+        manufacturer="Sundial",
+        entry_type=None,
+    )
 
 
 def local_hour(now: datetime) -> float:

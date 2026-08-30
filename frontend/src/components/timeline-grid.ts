@@ -2,14 +2,14 @@ import { LitElement, html, css, nothing, type TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 import { cogFilledIcon } from "../icons";
-import { baseStyles } from "../theme";
+import { baseStyles, cellStyles } from "../theme";
 import type {
   LightInfo,
   StatusPayload,
   TimelineCell,
   TimelineData,
 } from "../types";
-import { HOURS, currentHour, hasColor, hourLabel, kelvinToCss } from "../utils";
+import { HOURS, cellColor, currentHour, hasColor, hourLabel } from "../utils";
 
 export interface CellRef {
   entityId: string;
@@ -27,6 +27,7 @@ type GridCell = TimelineCell | { brightness: number; color_temp: number };
 export class TimelineGrid extends LitElement {
   static override styles = [
     baseStyles,
+    cellStyles,
     css`
       :host {
         display: block;
@@ -34,9 +35,17 @@ export class TimelineGrid extends LitElement {
       }
       .card {
         box-sizing: border-box;
+        height: 100%;
+        margin-bottom: 0;
+        display: flex;
+        flex-direction: column;
       }
       .scroll {
+        flex: 1;
+        min-height: 0;
         max-width: 100%;
+        overflow-y: auto;
+        overscroll-behavior: contain;
         padding-bottom: 6px;
       }
       .rows {
@@ -57,33 +66,6 @@ export class TimelineGrid extends LitElement {
           margin-top: 6px;
         }
       }
-      /* The 24 cells of one row, with row-level overlays (max line, playhead). */
-      .cells {
-        position: relative;
-        display: grid;
-        grid-template-columns: repeat(24, 1fr);
-        gap: 1px;
-      }
-      /* Continuous dim reference lines at the 100% mark (top) and baseline
-         (bottom). Fills paint above them so even 1px values stay visible. */
-      .cells::before,
-      .cells::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: var(--border);
-        opacity: 0.5;
-        z-index: 2;
-        pointer-events: none;
-      }
-      .cells::before {
-        top: 0;
-      }
-      .cells::after {
-        bottom: 0;
-      }
       /* Thin light playhead at the currently shown time. */
       .cells .playhead {
         position: absolute;
@@ -99,6 +81,14 @@ export class TimelineGrid extends LitElement {
         display: grid;
         grid-template-columns: repeat(24, 1fr);
         gap: 1px;
+      }
+      /* Above the rows' playheads (z-index 4) so scrolling content always
+         passes underneath the hour numbers. */
+      .headrow {
+        position: sticky;
+        top: 0;
+        z-index: 6;
+        background: var(--surface);
       }
       .label {
         z-index: 3;
@@ -214,12 +204,8 @@ export class TimelineGrid extends LitElement {
       .now-btn:hover {
         color: var(--accent-strong);
       }
-      /* Sun-following cells have no background — that's the default state;
-         only overrides get a marker. */
       .cell {
-        position: relative;
         height: 42px;
-        overflow: hidden;
         cursor: pointer;
       }
       @media (max-width: 960px) {
@@ -229,16 +215,6 @@ export class TimelineGrid extends LitElement {
       }
       .cell.readonly {
         cursor: default;
-      }
-      .cell .fill {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 3;
-      }
-      .cell.explicit {
-        background: var(--border);
       }
       .cell.selected {
         border: 2px var(--accent-strong) solid;
@@ -275,14 +251,9 @@ export class TimelineGrid extends LitElement {
         :host {
           min-height: 0;
         }
-        /* Fill the viewport to the very bottom; the grid fits the width (no
-           horizontal scrolling) and scrolls internally only vertically. */
+        /* Edge to edge: the grid fits the width (no horizontal scrolling). */
         .card {
           padding: 0;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-          margin-bottom: 0;
         }
         .scrub-bar {
           display: block;
@@ -293,11 +264,7 @@ export class TimelineGrid extends LitElement {
           display: none;
         }
         .scroll {
-          flex: 1;
-          min-height: 0;
-          overflow-y: auto;
           overflow-x: hidden;
-          overscroll-behavior: contain;
           -webkit-overflow-scrolling: touch;
           /* The content scrolls clear of the iOS home indicator. */
           padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
@@ -344,18 +311,11 @@ export class TimelineGrid extends LitElement {
         .headrow {
           margin-bottom: 0;
           padding-bottom: 4px;
+          background: var(--bg);
         }
         .hourhead {
           font-size: 0.55rem;
           overflow: hidden;
-        }
-        /* Above the rows' playheads (z-index 4) so scrolling content always
-           passes underneath the hour numbers. */
-        .headrow {
-          position: sticky;
-          top: 0;
-          z-index: 6;
-          background: var(--bg);
         }
         /* Scrolls with the content as its last item. */
         .legend {
@@ -387,7 +347,7 @@ export class TimelineGrid extends LitElement {
       ${this.previewActive ? this._scrubBar() : nothing}
       <div class="scroll ${this.scrollLocked ? "locked" : ""}">
         <div class="rows">
-          ${this._scrubRow()}
+          ${this.previewActive ? this._scrubRow() : nothing}
           ${this._headerRow(nowHour)}
           ${this._sunRow()}
           ${this._lightGroups().map(
@@ -430,7 +390,8 @@ export class TimelineGrid extends LitElement {
     />`;
   }
 
-  // Desktop: part of the grid, so the track lines up with the hour columns.
+  // Desktop, while previewing: part of the grid, so the track lines up with
+  // the hour columns.
   private _scrubRow(): TemplateResult {
     return html`<div class="gridrow scrubrow">
       <div class="label">
@@ -588,14 +549,7 @@ export class TimelineGrid extends LitElement {
     colorless = false
   ): TemplateResult {
     const brightness = cell ? cell.brightness : 0;
-    const rgb = cell && "rgb_color" in cell ? cell.rgb_color : null;
-    const color = !cell
-      ? "transparent"
-      : colorless
-        ? "var(--accent-light)"
-        : rgb
-          ? `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`
-          : kelvinToCss(cell.color_temp);
+    const color = cell ? cellColor(cell, colorless) : "transparent";
     const classes = [
       "cell",
       extra,
